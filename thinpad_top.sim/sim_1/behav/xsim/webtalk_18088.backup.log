@@ -1,0 +1,14 @@
+#-----------------------------------------------------------
+# Webtalk v2018.2 (64-bit)
+# SW Build 2258646 on Thu Jun 14 20:03:12 MDT 2018
+# IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
+# Start of session at: Fri Nov 23 19:50:27 2018
+# Process ID: 18088
+# Current directory: C:/Users/bry_0/Desktop/computer/thinpad_top.sim/sim_1/behav/xsim
+# Command line: wbtcv.exe -mode batch -source C:/Users/bry_0/Desktop/computer/thinpad_top.sim/sim_1/behav/xsim/xsim.dir/clock_behav/webtalk/xsim_webtalk.tcl -notrace
+# Log file: C:/Users/bry_0/Desktop/computer/thinpad_top.sim/sim_1/behav/xsim/webtalk.log
+# Journal file: C:/Users/bry_0/Desktop/computer/thinpad_top.sim/sim_1/behav/xsim\webtalk.jou
+#-----------------------------------------------------------
+source C:/Users/bry_0/Desktop/computer/thinpad_top.sim/sim_1/behav/xsim/xsim.dir/clock_behav/webtalk/xsim_webtalk.tcl -notrace
+INFO: [Common 17-186] 'C:/Users/bry_0/Desktop/computer/thinpad_top.sim/sim_1/behav/xsim/xsim.dir/clock_behav/webtalk/usage_statistics_ext_xsim.xml' has been successfully sent to Xilinx on Fri Nov 23 19:50:31 2018. For additional details about this file, please refer to the WebTalk help file at C:/Xilinx/Vivado/2018.2/doc/webtalk_introduction.html.
+INFO: [Common 17-206] Exiting Webtalk at Fri Nov 23 19:50:31 2018...
