@@ -96,185 +96,33 @@ module thinpad_top(
 // g=dpy0[7] // |     |
 //           // ---d---  p
 
+
+
 // 7段数码管译码器演示，将number用16进制显示在数码管上面
 reg[7:0] number;
 SEG7_LUT segL(.oSEG1(dpy0), .iDIG(number[3:0])); //dpy0是低位数码管
 SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
 
-reg[15:0] led_bits;
-assign leds = led_bits;
+  //连接指令存储器
+  wire[`InstAddrBus] inst_addr;
+  wire[`InstBus] inst;
+  wire rom_ce;
+  
+  //例化处理器cpu
+  cpu cpu0(
+  .clk(clock_btn),
+  .rst(reset_btn),
+  .rom_addr_o(inst_addr),
+  .rom_data_i(inst),
+  .rom_ce_o(rom_ce)
+  );
+  
+  //例化指令存储器
+  	inst_rom inst_rom0(
+      .addr(inst_addr),
+      .inst(inst),
+      .ce(rom_ce)    
+  );
 
-//定义四个状态
-reg[1:0] state;
-parameter S0 = 2'b00;
-parameter S1 = 2'b01;
-parameter S2 = 2'b10;
-parameter S3 = 2'b11;
-
-parameter Add = 4'b0001;
-parameter Sub = 4'b0010;
-parameter And = 4'b0010;
-parameter Or  = 4'b0011;
-parameter Xor = 4'b0100;
-parameter Not = 4'b0101;
-parameter Sll = 4'b0111;
-parameter Srl = 4'b1000;
-parameter Sra = 4'b1001;
-parameter Rol = 4'b1010;
-
-reg[31:0] a;
-reg[31:0] b;
-reg[3:0] op;
-reg[31:0] result;
-
-reg cf = 1'b0; //Carry Flag 
-reg zf = 1'b0; //Zero Flag 
-reg sf = 1'b0; //Signed Flag 
-reg vf = 1'b0; //Overflow Flag
-
-always@(posedge clock_btn or posedge reset_btn) begin
-    if(reset_btn)begin //复位按下，设置LED和数码管为初始值
-        number<=0;
-        state<=0;
-        result=0;
-        led_bits <= 16'h0;
-    end
-    else begin //每次按下时钟按钮，数码管显示值加1，LED循环左移
-        // led_bits <= {led_bits[14:0],led_bits[15]};
-        case(state)
-            S0:begin
-                a=dip_sw;
-                number=0;
-                led_bits=16'h0;
-                result=0;
-                op = 0;
-                cf = 1'b0;
-                zf = 1'b0;
-                sf = 1'b0;
-                vf = 1'b0;
-            end
-            S1:begin
-                b=dip_sw;
-            end
-            S2:begin
-                op= dip_sw[3:0];
-            end
-            S3:begin
-                case(op)
-                    Add:begin
-                        result=a+b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                        end
-                        if(result < a)begin
-                            cf = 1'b1;
-                        end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                        if((result[31] != a[31]) &&(a[31] ==b[31]))begin
-                            vf = 1'b1;
-                        end
-                    end
-                    Sub:begin
-                        result=a-b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                        end
-                        if(result < a)begin
-                            cf = 1'b1;
-                        end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                        if((result[31] != a[31]) &&(a[31] ==b[31]))begin
-                            vf = 1'b1;
-                        end
-                    end
-                    And:begin
-                        result=a&b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                        end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                    Or:begin
-                        result=a|b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                         end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                    Xor:begin
-                        result=a^b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                         end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                    Not:begin
-                        result=!a;
-                        if(result==0)begin
-                            zf = 1'b1;
-                         end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                    Sll:begin
-                        result=a<<b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                        end
-                    end
-                    Srl:begin
-                        result=a>>b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                         end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                    Sra:begin
-                        result=a>>>b;
-                        if(result==0)begin
-                            zf = 1'b1;
-                         end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                    Rol:begin
-                        result=(a<<b)|(a>>(32-b));
-                        if(result==0)begin
-                            zf = 1'b1;
-                         end
-                        if(result[31]==1'b1)begin
-                            sf = 1'b1;
-                        end
-                    end
-                endcase
-            end
-            default:
-                result=0;
-        endcase
-        state = state+1;
-        number <= result;
-        led_bits[15] <= cf;
-        led_bits[14] <= zf;
-        led_bits[13] <= sf;
-        led_bits[12] <= vf;
-        led_bits[11:0]  <= 0;
-    end
-end
-
-/* =========== Demo code end =========== */
 
 endmodule

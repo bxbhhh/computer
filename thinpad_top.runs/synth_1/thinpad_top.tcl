@@ -31,13 +31,12 @@ set_property target_language Verilog [current_project]
 set_property ip_output_repo c:/Users/bry_0/Desktop/computer/thinpad_top.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 read_verilog C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/defines.vh
+read_mem C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/inst_rom.data
 read_verilog -library xil_defaultlib {
-  C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/openmips_min_scopy.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/pc_reg.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/id.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/ex_mem.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/if_id.v
-  C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/openmips.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/inst_rom.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/regfile.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/ex.v
@@ -48,6 +47,7 @@ read_verilog -library xil_defaultlib {
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/async.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/SEG7_LUT.v
   C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/vga.v
+  C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/new/cpu.v
 }
 read_ip -quiet C:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/ip/pll_example/pll_example.xci
 set_property used_in_implementation false [get_files -all c:/Users/bry_0/Desktop/computer/thinpad_top.srcs/sources_1/ip/pll_example/pll_example_board.xdc]
