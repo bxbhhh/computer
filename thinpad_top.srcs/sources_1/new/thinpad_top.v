@@ -114,6 +114,12 @@ SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
   wire[`InstAddrBus] inst_addr;
   wire[`InstBus] inst;
   wire rom_ce;
+  wire mem_we_i;
+  wire[`RegBus] mem_addr_i;
+  wire[`RegBus] mem_data_i;
+  wire[`RegBus] mem_data_o;
+  wire[3:0] mem_sel_i;  
+  wire mem_ce_i;    
   
   //例化处理器cpu
   cpu cpu0(
@@ -121,7 +127,14 @@ SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
   .rst(reset_btn),
   .rom_addr_o(inst_addr),
   .rom_data_i(inst),
-  .rom_ce_o(rom_ce)
+  .rom_ce_o(rom_ce),
+  
+  .ram_we_o(mem_we_i),
+  .ram_addr_o(mem_addr_i),
+  .ram_sel_o(mem_sel_i),
+  .ram_data_o(mem_data_i),
+  .ram_data_i(mem_data_o),
+  .ram_ce_o(mem_ce_i)      
   );
   
   //例化指令存储器
@@ -129,6 +142,16 @@ SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
       .addr(inst_addr),
       .inst(inst),
       .ce(rom_ce)    
+  );
+//例化数据存储器
+  data_ram data_ram0(
+     .clk(clock_btn),
+     .we(mem_we_i),
+     .addr(mem_addr_i),
+     .sel(mem_sel_i),
+     .data_i(mem_data_i),
+     .data_o(mem_data_o),
+     .ce(mem_ce_i)        
   );
 
 

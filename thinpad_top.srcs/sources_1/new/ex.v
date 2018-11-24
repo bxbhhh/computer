@@ -20,6 +20,7 @@ module ex(
 	input wire[`RegBus]           reg2_i,
 	input wire[`RegAddrBus]       wd_i,
 	input wire                    wreg_i,
+	input wire[`RegBus]           inst_i,	
 	
     //处于执行阶段的转移指令要保存的返回地址
     input wire[`RegBus]           link_address_i,
@@ -30,6 +31,11 @@ module ex(
 	output reg[`RegAddrBus]       wd_o,
 	output reg                    wreg_o,
 	output reg[`RegBus]			  wdata_o,
+
+    output wire[`AluOpBus]        aluop_o,//执行阶段的运算子类型
+    output wire[`RegBus]          mem_addr_o,//加载，存储指令对应的地址
+    output wire[`RegBus]          reg2_o,//存储指令要存储的数据
+    
 	output reg					  stallreq       
 	
 );
@@ -41,8 +47,12 @@ module ex(
     wire[`RegBus] reg1_i_not; //保存输入的第一个操作数reg1_i取反后的值    
     wire[`RegBus] result_sum; //保存加法的结果
     
-    assign result_num = reg1_i + reg2_i;
+    assign result_sum = reg1_i + reg2_i;
     assign reg1_i_not = ~reg1_i;
+    assign aluop_o = aluop_i;//利用aluop_o确定访存阶段加载存储指令
+    assign reg2_o = reg2_i; //reg2_i是存储指令存储的数据，通过reg2_o到访存阶段
+    //mem_addr传递到访存阶段，是加载、存储指令对应的存储器地址
+    assign mem_addr_o = reg1_i + {{16{inst_i[15]}},inst_i[15:0]};//此处为译码阶段输出接口inst_0的输出值
     
  	
  //进行逻辑运算   

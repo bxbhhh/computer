@@ -17,7 +17,14 @@ module cpu(
  
 	input wire[`RegBus]           rom_data_i,
 	output wire[`RegBus]           rom_addr_o,
-	output wire                    rom_ce_o
+	output wire                    rom_ce_o,
+    //连接数据存储器data_ram
+    input wire[`RegBus]           ram_data_i,
+    output wire[`RegBus]           ram_addr_o,
+    output wire[`RegBus]           ram_data_o,
+    output wire                    ram_we_o,
+    output wire[3:0]               ram_sel_o,
+    output wire[3:0]               ram_ce_o
 	
 );
 
@@ -248,11 +255,21 @@ module cpu(
 		.wd_i(mem_wd_i),
 		.wreg_i(mem_wreg_i),
 		.wdata_i(mem_wdata_i),
-	  
+    
+        //来自memory的信息
+        .mem_data_i(ram_data_i),
+      
 		//送到MEM/WB模块的信息
 		.wd_o(mem_wd_o),
 		.wreg_o(mem_wreg_o),
-		.wdata_o(mem_wdata_o)
+		.wdata_o(mem_wdata_o),
+		
+		//送到memory的信息
+        .mem_addr_o(ram_addr_o),
+        .mem_we_o(ram_we_o),
+        .mem_sel_o(ram_sel_o),
+        .mem_data_o(ram_data_o),
+        .mem_ce_o(ram_ce_o)    
 	);
 
   //MEM/WB模块

@@ -54,6 +54,12 @@
 `define EXE_BGTZ  6'b000111
 `define EXE_BNE  6'b000101
 
+`define EXE_LB  6'b100000
+`define EXE_LBU  6'b100100
+`define EXE_LW  6'b100011
+`define EXE_SB  6'b101000
+`define EXE_SW  6'b101011
+
 `define EXE_SYNC  6'b001111
 `define EXE_PREF  6'b110011
 
@@ -91,6 +97,12 @@
 `define EXE_BGTZ_OP  8'b01010100
 `define EXE_BNE_OP  8'b01010010
 
+`define EXE_LB_OP  8'b11100000
+`define EXE_LBU_OP  8'b11100100
+`define EXE_LW_OP  8'b11100011
+`define EXE_SB_OP  8'b11101000
+`define EXE_SW_OP  8'b11101011
+
 `define EXE_NOP_OP    8'b00000000
 
 //AluSel
@@ -99,6 +111,7 @@
 `define EXE_RES_MOVE 3'b011	
 `define EXE_RES_ARITHMETIC 3'b100
 `define EXE_RES_JUMP_BRANCH 3'b110	
+`define EXE_RES_LOAD_STORE 3'b111
 `define EXE_RES_NOP 3'b000
 
 
@@ -108,6 +121,12 @@
 `define InstMemNum 131071
 `define InstMemNumLog2 17
 
+//数据存储器data_ram
+`define DataAddrBus 31:0
+`define DataBus 31:0
+`define DataMemNum 131071
+`define DataMemNumLog2 17
+`define ByteWidth 7:0
 
 //通用寄存器regfile
 `define RegAddrBus 4:0

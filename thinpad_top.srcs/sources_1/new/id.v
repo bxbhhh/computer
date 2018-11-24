@@ -44,6 +44,7 @@ module id(
 	output reg[`RegBus]           reg2_o,
 	output reg[`RegAddrBus]       wd_o,
 	output reg                    wreg_o,
+	output wire[`RegBus]          inst_o, //新增加输出接口	
 	
 	output reg                    next_inst_in_delayslot_o,
     
@@ -70,6 +71,8 @@ module id(
   //分支指令中的offset左移两位，然后扩展32位
   assign imm_sll2_signedext = {{14{inst_i[15]}}, inst_i[15:0], 2'b00 };  
   assign stallreq = `NoStop;
+  
+  assign inst_o = inst_i;
   
 	always @ (*) begin	
 		if (rst == `RstEnable) begin
@@ -239,7 +242,32 @@ module id(
                         branch_flag_o <= `Branch;
                         next_inst_in_delayslot_o <= `InDelaySlot;              
                     end
-                end                                         				
+                end 
+				`EXE_LB:			begin
+                    wreg_o <= `WriteEnable;        aluop_o <= `EXE_LB_OP;
+                    alusel_o <= `EXE_RES_LOAD_STORE; reg1_read_o <= 1'b1;    reg2_read_o <= 1'b0;          
+                    wd_o <= inst_i[20:16]; instvalid <= `InstValid;    
+                end
+                `EXE_LBU:            begin
+                    wreg_o <= `WriteEnable;        aluop_o <= `EXE_LBU_OP;
+                    alusel_o <= `EXE_RES_LOAD_STORE; reg1_read_o <= 1'b1;    reg2_read_o <= 1'b0;          
+                    wd_o <= inst_i[20:16]; instvalid <= `InstValid;    
+                end 
+				`EXE_LW:			begin
+                    wreg_o <= `WriteEnable;        aluop_o <= `EXE_LW_OP;
+                    alusel_o <= `EXE_RES_LOAD_STORE; reg1_read_o <= 1'b1;    reg2_read_o <= 1'b0;          
+                    wd_o <= inst_i[20:16]; instvalid <= `InstValid;    
+                end
+				`EXE_SB:			begin
+                    wreg_o <= `WriteDisable;        aluop_o <= `EXE_SB_OP;
+                    reg1_read_o <= 1'b1;    reg2_read_o <= 1'b1; instvalid <= `InstValid;    
+                    alusel_o <= `EXE_RES_LOAD_STORE; 
+                end  
+				`EXE_SW:			begin
+                    wreg_o <= `WriteDisable;        aluop_o <= `EXE_SW_OP;
+                    reg1_read_o <= 1'b1;    reg2_read_o <= 1'b1; instvalid <= `InstValid;    
+                    alusel_o <= `EXE_RES_LOAD_STORE; 
+                end                                                                                                     				
                 `EXE_PREF:			begin
                     wreg_o <= `WriteDisable;		aluop_o <= `EXE_NOP_OP;
                     alusel_o <= `EXE_RES_NOP; reg1_read_o <= 1'b0;	reg2_read_o <= 1'b0;	  	  	
