@@ -1,31 +1,8 @@
 //////////////////////////////////////////////////////////////////////
-////                                                              ////
-//// Copyright (C) 2014 leishangwen@163.com                       ////
-////                                                              ////
-//// This source file may be used and distributed without         ////
-//// restriction provided that this copyright statement is not    ////
-//// removed from the file and that any derivative work contains  ////
-//// the original copyright notice and the associated disclaimer. ////
-////                                                              ////
-//// This source file is free software; you can redistribute it   ////
-//// and/or modify it under the terms of the GNU Lesser General   ////
-//// Public License as published by the Free Software Foundation; ////
-//// either version 2.1 of the License, or (at your option) any   ////
-//// later version.                                               ////
-////                                                              ////
-//// This source is distributed in the hope that it will be       ////
-//// useful, but WITHOUT ANY WARRANTY; without even the implied   ////
-//// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      ////
-//// PURPOSE.  See the GNU Lesser General Public License for more ////
-//// details.                                                     ////
-////                                                              ////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
 // Module:  id_ex
 // File:    id_ex.v
-// Author:  Lei Silei
-// E-mail:  leishangwen@163.com
+// Author:  BaiReny
+// E-mail:  bry6789@163.com
 // Description: ID/EX½×¶ÎµÄ¼Ä´æÆ÷
 // Revision: 1.0
 //////////////////////////////////////////////////////////////////////
@@ -34,9 +11,9 @@
 
 module id_ex(
 
-	input	wire										clk,
-	input wire										rst,
-
+	input	wire				   clk,
+	input wire					   rst,
+    input wire[5:0]               stall,
 	
 	//´ÓÒëÂë½×¶Î´«µÝµÄÐÅÏ¢
 	input wire[`AluOpBus]         id_aluop,
@@ -64,14 +41,21 @@ module id_ex(
 			ex_reg2 <= `ZeroWord;
 			ex_wd <= `NOPRegAddr;
 			ex_wreg <= `WriteDisable;
-		end else begin		
-			ex_aluop <= id_aluop;
-			ex_alusel <= id_alusel;
-			ex_reg1 <= id_reg1;
-			ex_reg2 <= id_reg2;
-			ex_wd <= id_wd;
-			ex_wreg <= id_wreg;		
-		end
-	end
+		end else if(stall[2] == `Stop && stall[3] == `NoStop) begin
+            ex_aluop <= `EXE_NOP_OP;
+            ex_alusel <= `EXE_RES_NOP;
+            ex_reg1 <= `ZeroWord;
+            ex_reg2 <= `ZeroWord;
+            ex_wd <= `NOPRegAddr;
+            ex_wreg <= `WriteDisable;            
+        end else if(stall[2] == `NoStop) begin        
+            ex_aluop <= id_aluop;
+            ex_alusel <= id_alusel;
+            ex_reg1 <= id_reg1;
+            ex_reg2 <= id_reg2;
+            ex_wd <= id_wd;
+            ex_wreg <= id_wreg;        
+        end
+    end
 	
 endmodule

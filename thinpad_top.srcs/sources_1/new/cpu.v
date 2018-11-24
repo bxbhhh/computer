@@ -1,4 +1,11 @@
-//处理器cpu包含五级流水
+//////////////////////////////////////////////////////////////////////
+// Module:  cpu
+// File:    cpu.v
+// Author:  BaiReny
+// E-mail:  bry6789@163.com
+// Description: cpu处理器的顶层文件
+// Revision: 1.0
+//////////////////////////////////////////////////////////////////////
 
 `include "defines.vh"
 
@@ -55,17 +62,22 @@ module cpu(
 	wire[`RegBus] wb_wdata_i;
 	
 	//连接译码阶段ID模块与通用寄存器Regfile模块
-  wire reg1_read;
-  wire reg2_read;
-  wire[`RegBus] reg1_data;
-  wire[`RegBus] reg2_data;
-  wire[`RegAddrBus] reg1_addr;
-  wire[`RegAddrBus] reg2_addr;
+    wire reg1_read;
+    wire reg2_read;
+    wire[`RegBus] reg1_data;
+    wire[`RegBus] reg2_data;
+    wire[`RegAddrBus] reg1_addr;
+    wire[`RegAddrBus] reg2_addr;
+    
+    wire[5:0] stall;
+    wire stallreq_from_id;    
+    wire stallreq_from_ex;
   
   //pc_reg例化
 	pc_reg pc_reg0(
 		.clk(clk),
 		.rst(rst),
+		.stall(stall),
 		.pc(pc),
 		.ce(rom_ce_o)	
 			
@@ -77,10 +89,11 @@ module cpu(
 	if_id if_id0(
 		.clk(clk),
 		.rst(rst),
+		.stall(stall),
 		.if_pc(pc),
 		.if_inst(rom_data_i),
 		.id_pc(id_pc_i),
-		.id_inst(id_inst_i)      	
+		.id_inst(id_inst_i) 	  	
 	);
 	
 	//译码阶段ID模块
@@ -91,6 +104,16 @@ module cpu(
 
 		.reg1_data_i(reg1_data),
 		.reg2_data_i(reg2_data),
+
+	  //处于执行阶段的指令要写入的目的寄存器信息，此处解决RAW数据冲突
+		.ex_wreg_i(ex_wreg_o),
+		.ex_wdata_i(ex_wdata_o),
+		.ex_wd_i(ex_wd_o),
+
+	  //处于访存阶段的指令要写入的目的寄存器信息，此处解决RAW数据冲突
+		.mem_wreg_i(mem_wreg_o),
+		.mem_wdata_i(mem_wdata_o),
+		.mem_wd_i(mem_wd_o),
 
 		//送到regfile的信息
 		.reg1_read_o(reg1_read),
@@ -105,7 +128,9 @@ module cpu(
 		.reg1_o(id_reg1_o),
 		.reg2_o(id_reg2_o),
 		.wd_o(id_wd_o),
-		.wreg_o(id_wreg_o)
+		.wreg_o(id_wreg_o),
+		
+		.stallreq(stallreq_from_id)
 	);
 
   //通用寄存器Regfile例化
@@ -127,6 +152,7 @@ module cpu(
 	id_ex id_ex0(
 		.clk(clk),
 		.rst(rst),
+		.stall(stall),
 		
 		//从译码阶段ID模块传递的信息
 		.id_aluop(id_aluop_o),
@@ -160,7 +186,8 @@ module cpu(
 	  //EX模块的输出到EX/MEM模块信息
 		.wd_o(ex_wd_o),
 		.wreg_o(ex_wreg_o),
-		.wdata_o(ex_wdata_o)
+		.wdata_o(ex_wdata_o),
+		.stallreq(stallreq_from_id)
 		
 	);
 
@@ -168,6 +195,7 @@ module cpu(
   ex_mem ex_mem0(
 		.clk(clk),
 		.rst(rst),
+		.stall(stall),
 	  
 		//来自执行阶段EX模块的信息	
 		.ex_wd(ex_wd_o),
@@ -202,6 +230,7 @@ module cpu(
 	mem_wb mem_wb0(
 		.clk(clk),
 		.rst(rst),
+		.stall(stall),
 
 		//来自访存阶段MEM模块的信息	
 		.mem_wd(mem_wd_o),
@@ -214,5 +243,15 @@ module cpu(
 		.wb_wdata(wb_wdata_i)
 									       	
 	);
+	ctrl ctrl0(
+        .rst(rst),
+    
+        .stallreq_from_id(stallreq_from_id),
+    
+      //来自执行阶段的暂停请求
+        .stallreq_from_ex(stallreq_from_ex),
+
+        .stall(stall)           
+    );	
 
 endmodule
