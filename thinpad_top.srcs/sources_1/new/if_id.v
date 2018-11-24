@@ -19,10 +19,11 @@ module if_id(
 	input wire[`InstBus]          if_inst,
 	output reg[`InstAddrBus]      id_pc,
 	output reg[`InstBus]          id_inst,  
-	input wire[5:0]               stall
-	
+	input wire[5:0]               stall,
+	output wire[`DebugBus] debugdata
 );
-
+    assign debugdata = {if_pc[7:0],if_inst[7:0]};
+    
 	always @ (posedge clk) begin
 		if (rst == `RstEnable) begin
             id_pc <= `ZeroWord;

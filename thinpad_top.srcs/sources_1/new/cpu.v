@@ -17,9 +17,45 @@ module cpu(
  
 	input wire[`RegBus]           rom_data_i,
 	output wire[`RegBus]           rom_addr_o,
-	output wire                    rom_ce_o
-	
-);
+	output wire                    rom_ce_o,
+
+	input wire[5:0] debug,
+    output reg[`DebugBus] debugdata
+    );
+    
+    wire[`DebugBus] ifdebugdata ;
+    wire[`DebugBus] iddebugdata ;
+    wire[`DebugBus] exdebugdata ;
+    wire[`DebugBus] memdebugdata ;
+    wire[`DebugBus] wbdebugdata ;
+    wire[`DebugBus] regdebugdata ;
+    wire[`DebugBus] ctrldebugdata ;
+    wire[`DebugBus] ex_memdebugdata ;
+    always @(*) begin
+        case(debug[5:0])
+            6'b000000: begin
+                debugdata <= ifdebugdata ;
+            end
+            6'b000001: begin
+                debugdata <= iddebugdata ;
+            end
+            6'b000010: begin
+                debugdata <= exdebugdata ;
+            end
+            6'b000011: begin
+                debugdata <= memdebugdata ;
+            end
+            6'b000100: begin
+                debugdata <= wbdebugdata ;
+            end           
+            6'b000101: begin
+                debugdata <= ctrldebugdata ;
+            end
+            default: begin
+                debugdata <= regdebugdata ;
+            end
+        endcase
+    end
 
 	wire[`InstAddrBus] pc;
 	wire[`InstAddrBus] id_pc_i;
@@ -105,7 +141,8 @@ module cpu(
 		.if_pc(pc),
 		.if_inst(rom_data_i),
 		.id_pc(id_pc_i),
-		.id_inst(id_inst_i) 	  	
+		.id_inst(id_inst_i),
+		.debugdata(ifdebugdata)	
 	);
 	
 	//译码阶段ID模块
@@ -195,7 +232,8 @@ module cpu(
 		.ex_wreg(ex_wreg_i),
 		.ex_link_address(ex_link_address_i),
         .ex_is_in_delayslot(ex_is_in_delayslot_i),
-        .is_in_delayslot_o(is_in_delayslot_i)		
+        .is_in_delayslot_o(is_in_delayslot_i),
+        .debugdata(iddebugdata)	
 	);		
 	
 	//EX模块
@@ -235,8 +273,8 @@ module cpu(
 		//送到访存阶段MEM模块的信息
 		.mem_wd(mem_wd_i),
 		.mem_wreg(mem_wreg_i),
-		.mem_wdata(mem_wdata_i)
-
+		.mem_wdata(mem_wdata_i),
+        .debugdata(exdebugdata)
 						       	
 	);
 	
@@ -269,15 +307,16 @@ module cpu(
 		//送到回写阶段的信息
 		.wb_wd(wb_wd_i),
 		.wb_wreg(wb_wreg_i),
-		.wb_wdata(wb_wdata_i)
-									       	
+		.wb_wdata(wb_wdata_i),
+		.debugdata(memdebugdata)	       	
 	);
 	ctrl ctrl0(
         .rst(rst),    
         .stallreq_from_id(stallreq_from_id),   
       //来自执行阶段的暂停请求
         .stallreq_from_ex(stallreq_from_ex),
-        .stall(stall)           
+        .stall(stall),
+        .debugdata(ctrldebugdata)   
     );	
 
 endmodule

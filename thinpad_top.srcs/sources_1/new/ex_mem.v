@@ -23,11 +23,10 @@ module ex_mem(
 	//送到访存阶段的信息
 	output reg[`RegAddrBus]      mem_wd,
 	output reg                   mem_wreg,
-	output reg[`RegBus]			  mem_wdata
-	
-	
+	output reg[`RegBus]			  mem_wdata,
+	output wire[`DebugBus]        debugdata
 );
-
+    assign debugdata = {3'b0,ex_wd[4:0],ex_wdata[7:0]};
 
 	always @ (posedge clk) begin
 		if(rst == `RstEnable) begin
