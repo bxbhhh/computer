@@ -32,6 +32,8 @@ module cpu(
 	wire[`RegBus] id_reg2_o;
 	wire id_wreg_o;
 	wire[`RegAddrBus] id_wd_o;
+    wire id_is_in_delayslot_o;
+    wire[`RegBus] id_link_address_o;
 	
 	//连接ID/EX模块的输出与执行阶段EX模块的输入
 	wire[`AluOpBus] ex_aluop_i;
@@ -40,6 +42,8 @@ module cpu(
 	wire[`RegBus] ex_reg2_i;
 	wire ex_wreg_i;
 	wire[`RegAddrBus] ex_wd_i;
+	wire ex_is_in_delayslot_i;	
+    wire[`RegBus] ex_link_address_i;
 	
 	//连接执行阶段EX模块的输出与EX/MEM模块的输入
 	wire ex_wreg_o;
@@ -68,7 +72,13 @@ module cpu(
     wire[`RegBus] reg2_data;
     wire[`RegAddrBus] reg1_addr;
     wire[`RegAddrBus] reg2_addr;
-    
+    //延迟槽
+    wire is_in_delayslot_i;
+    wire is_in_delayslot_o;
+    wire next_inst_in_delayslot_o;
+    wire id_branch_flag_o;
+    wire[`RegBus] branch_target_address;
+    //暂停
     wire[5:0] stall;
     wire stallreq_from_id;    
     wire stallreq_from_ex;
@@ -78,6 +88,8 @@ module cpu(
 		.clk(clk),
 		.rst(rst),
 		.stall(stall),
+		.branch_flag_i(id_branch_flag_o),
+        .branch_target_address_i(branch_target_address),    
 		.pc(pc),
 		.ce(rom_ce_o)	
 			
@@ -105,15 +117,17 @@ module cpu(
 		.reg1_data_i(reg1_data),
 		.reg2_data_i(reg2_data),
 
-	  //处于执行阶段的指令要写入的目的寄存器信息，此处解决RAW数据冲突
+	    //处于执行阶段的指令要写入的目的寄存器信息，此处解决RAW数据冲突
 		.ex_wreg_i(ex_wreg_o),
 		.ex_wdata_i(ex_wdata_o),
 		.ex_wd_i(ex_wd_o),
 
-	  //处于访存阶段的指令要写入的目的寄存器信息，此处解决RAW数据冲突
+	    //处于访存阶段的指令要写入的目的寄存器信息，此处解决RAW数据冲突
 		.mem_wreg_i(mem_wreg_o),
 		.mem_wdata_i(mem_wdata_o),
 		.mem_wd_i(mem_wd_o),
+	    //延迟槽
+		.is_in_delayslot_i(is_in_delayslot_i),
 
 		//送到regfile的信息
 		.reg1_read_o(reg1_read),
@@ -129,6 +143,13 @@ module cpu(
 		.reg2_o(id_reg2_o),
 		.wd_o(id_wd_o),
 		.wreg_o(id_wreg_o),
+		
+	   .next_inst_in_delayslot_o(next_inst_in_delayslot_o),	
+       .branch_flag_o(id_branch_flag_o),
+       .branch_target_address_o(branch_target_address),       
+       .link_addr_o(id_link_address_o),
+       
+       .is_in_delayslot_o(id_is_in_delayslot_o),
 		
 		.stallreq(stallreq_from_id)
 	);
@@ -161,6 +182,9 @@ module cpu(
 		.id_reg2(id_reg2_o),
 		.id_wd(id_wd_o),
 		.id_wreg(id_wreg_o),
+		.id_link_address(id_link_address_o),
+        .id_is_in_delayslot(id_is_in_delayslot_o),
+        .next_inst_in_delayslot_i(next_inst_in_delayslot_o),		
 	
 		//传递到执行阶段EX模块的信息
 		.ex_aluop(ex_aluop_i),
@@ -168,7 +192,10 @@ module cpu(
 		.ex_reg1(ex_reg1_i),
 		.ex_reg2(ex_reg2_i),
 		.ex_wd(ex_wd_i),
-		.ex_wreg(ex_wreg_i)
+		.ex_wreg(ex_wreg_i),
+		.ex_link_address(ex_link_address_i),
+        .ex_is_in_delayslot(ex_is_in_delayslot_i),
+        .is_in_delayslot_o(is_in_delayslot_i)		
 	);		
 	
 	//EX模块
@@ -182,6 +209,8 @@ module cpu(
 		.reg2_i(ex_reg2_i),
 		.wd_i(ex_wd_i),
 		.wreg_i(ex_wreg_i),
+		.link_address_i(ex_link_address_i),
+        .is_in_delayslot_i(ex_is_in_delayslot_i),    		
 	  
 	  //EX模块的输出到EX/MEM模块信息
 		.wd_o(ex_wd_o),
@@ -244,13 +273,10 @@ module cpu(
 									       	
 	);
 	ctrl ctrl0(
-        .rst(rst),
-    
-        .stallreq_from_id(stallreq_from_id),
-    
+        .rst(rst),    
+        .stallreq_from_id(stallreq_from_id),   
       //来自执行阶段的暂停请求
         .stallreq_from_ex(stallreq_from_ex),
-
         .stall(stall)           
     );	
 

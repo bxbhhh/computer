@@ -47,6 +47,13 @@
 `define EXE_ADDIU  6'b001001
 `define EXE_CLO  6'b100001
 
+`define EXE_J  6'b000010
+`define EXE_JAL  6'b000011
+`define EXE_JR  6'b001000
+`define EXE_BEQ  6'b000100
+`define EXE_BGTZ  6'b000111
+`define EXE_BNE  6'b000101
+
 `define EXE_SYNC  6'b001111
 `define EXE_PREF  6'b110011
 
@@ -77,13 +84,21 @@
 `define EXE_ADDIU_OP  8'b01010110
 `define EXE_CLO_OP  8'b10110001
 
+`define EXE_J_OP  8'b01001111
+`define EXE_JAL_OP  8'b01010000
+`define EXE_JR_OP  8'b00001000
+`define EXE_BEQ_OP  8'b01010001
+`define EXE_BGTZ_OP  8'b01010100
+`define EXE_BNE_OP  8'b01010010
+
 `define EXE_NOP_OP    8'b00000000
 
 //AluSel
 `define EXE_RES_LOGIC 3'b001
 `define EXE_RES_SHIFT 3'b010
 `define EXE_RES_MOVE 3'b011	
-`define EXE_RES_ARITHMETIC 3'b100	
+`define EXE_RES_ARITHMETIC 3'b100
+`define EXE_RES_JUMP_BRANCH 3'b110	
 `define EXE_RES_NOP 3'b000
 
 

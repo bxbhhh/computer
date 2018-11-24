@@ -20,6 +20,11 @@ module ex(
 	input wire[`RegBus]           reg2_i,
 	input wire[`RegAddrBus]       wd_i,
 	input wire                    wreg_i,
+	
+    //处于执行阶段的转移指令要保存的返回地址
+    input wire[`RegBus]           link_address_i,
+    //当前执行阶段的指令是否处于延迟槽
+    input wire                    is_in_delayslot_i,    
 
 	
 	output reg[`RegAddrBus]       wd_o,
@@ -145,8 +150,11 @@ module ex(
             end 
             `EXE_RES_ARITHMETIC:	begin
                 wdata_o <= arithmeticres;  
-             end               	 		 	
-            default:					begin
+             end
+             `EXE_RES_JUMP_BRANCH:	begin
+                 wdata_o <= link_address_i;
+             end                   	 		 	
+             default:					begin
                 wdata_o <= `ZeroWord;
             end
          endcase
