@@ -32,12 +32,10 @@ module ex_mem(
 	//为实现加载、访存指令而添加输出接口
     output reg[`AluOpBus]        mem_aluop,
     output reg[`RegBus]          mem_mem_addr,
-    output reg[`RegBus]          mem_reg2
-	
-	
-	
+    output reg[`RegBus]          mem_reg2,
+	output wire[`DebugBus]        debugdata
 );
-
+    assign debugdata = {3'b0,ex_wd[4:0],ex_wdata[7:0]};
 
 	always @ (posedge clk) begin
 		if(rst == `RstEnable) begin

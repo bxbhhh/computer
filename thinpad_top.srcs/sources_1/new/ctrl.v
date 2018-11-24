@@ -17,11 +17,11 @@ module ctrl(
 
   //来自执行阶段的暂停请求
 	input wire                   stallreq_from_ex,
-	output reg[5:0]              stall       
-	
+	output reg[5:0]              stall,
+	output wire[`DebugBus]        debugdata  
 );
-
-
+    assign debugdata = {stallreq_from_id,stallreq_from_ex,8'b0,stall[5:0]};
+    
 	always @ (*) begin
 		if(rst == `RstEnable) begin
 			stall <= 6'b000000;

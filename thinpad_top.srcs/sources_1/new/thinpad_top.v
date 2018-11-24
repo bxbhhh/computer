@@ -128,13 +128,15 @@ SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
   .rom_addr_o(inst_addr),
   .rom_data_i(inst),
   .rom_ce_o(rom_ce),
-  
   .ram_we_o(mem_we_i),
   .ram_addr_o(mem_addr_i),
   .ram_sel_o(mem_sel_i),
   .ram_data_o(mem_data_i),
   .ram_data_i(mem_data_o),
-  .ram_ce_o(mem_ce_i)      
+  .ram_ce_o(mem_ce_i),
+  //debug
+  .debug(dip_sw[5:0]),
+  .debugdata(leds[15:0])
   );
   
   //例化指令存储器

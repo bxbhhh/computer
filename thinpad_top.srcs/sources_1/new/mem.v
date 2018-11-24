@@ -34,10 +34,11 @@ module mem(
     output wire                     mem_we_o,
     output reg[3:0]              mem_sel_o,
     output reg[`RegBus]          mem_data_o,
-    output reg                   mem_ce_o    
+    output reg                   mem_ce_o,
+    output wire                 debugdata
 	
 );
-
+    assign debugdata = {mem_addr_i[7:0], mem_data_i[7:0]} ;
 	wire[`RegBus] zero32;
 	reg                   mem_we;
 
