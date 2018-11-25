@@ -106,10 +106,10 @@ module thinpad_top(
 
 
 // 7段数码管译码器演示，将number用16进制显示在数码管上面
-reg[7:0] number;
-SEG7_LUT segL(.oSEG1(dpy0), .iDIG(number[3:0])); //dpy0是低位数码管
-SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
-
+wire[`DebugBus] debugdata;
+SEG7_LUT segL(.oSEG1(dpy0), .iDIG(debugdata[19:16])); //dpy0是低位数码管
+SEG7_LUT segH(.oSEG1(dpy1), .iDIG(debugdata[23:20])); //dpy1是高位数码管
+assign leds[15:0] = debugdata[15:0];
   //连接指令存储器
   wire[`InstAddrBus] inst_addr;
   wire[`InstBus] inst;
@@ -128,6 +128,7 @@ SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
   .rom_addr_o(inst_addr),
   .rom_data_i(inst),
   .rom_ce_o(rom_ce),
+  
   .ram_we_o(mem_we_i),
   .ram_addr_o(mem_addr_i),
   .ram_sel_o(mem_sel_i),
@@ -135,8 +136,8 @@ SEG7_LUT segH(.oSEG1(dpy1), .iDIG(number[7:4])); //dpy1是高位数码管
   .ram_data_i(mem_data_o),
   .ram_ce_o(mem_ce_i),
   //debug
-  .debug(dip_sw[5:0]),
-  .debugdata(leds[15:0])
+    .debug(dip_sw[5:0]),
+    .debugdata(debugdata)  
   );
   
   //例化指令存储器

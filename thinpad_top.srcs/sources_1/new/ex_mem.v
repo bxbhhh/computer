@@ -33,9 +33,11 @@ module ex_mem(
     output reg[`AluOpBus]        mem_aluop,
     output reg[`RegBus]          mem_mem_addr,
     output reg[`RegBus]          mem_reg2,
+	
 	output wire[`DebugBus]        debugdata
 );
-    assign debugdata = {3'b0,ex_wd[4:0],ex_wdata[7:0]};
+    assign debugdata = {3'b0,ex_wd[4:0],ex_wdata[15:0]};
+
 
 	always @ (posedge clk) begin
 		if(rst == `RstEnable) begin

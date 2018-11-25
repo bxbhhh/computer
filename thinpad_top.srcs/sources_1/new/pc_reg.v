@@ -18,6 +18,7 @@ module pc_reg(
 	//从译码模块传递过来的信息
     input wire                    branch_flag_i,
     input wire[`RegBus]           branch_target_address_i
+	
 );
 //当stall[0]为NotStop时，pc+4，否则pc保持不变
 	always @ (posedge clk) begin

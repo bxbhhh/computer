@@ -11,18 +11,21 @@
 
 module id(
 
-	input wire										rst,
+	input wire							rst,
 	input wire[`InstAddrBus]			pc_i,
-	input wire[`InstBus]          inst_i,
+	input wire[`InstBus]               inst_i,
 
 	//处于执行阶段的指令要写入的目的寄存器信息
-	input wire										ex_wreg_i,
+	input wire								ex_wreg_i,
 	input wire[`RegBus]						ex_wdata_i,
-	input wire[`RegAddrBus]       ex_wd_i,
+	input wire[`RegAddrBus]                ex_wd_i,
 	
+	//处于执行阶段的指令的一些信息，用于解决load相关
+    input wire[`AluOpBus]                    ex_aluop_i,
+    
 	//处于访存阶段的指令要写入的目的寄存器信息
-	input wire										mem_wreg_i,
-	input wire[`RegBus]						mem_wdata_i,
+	input wire					   mem_wreg_i,
+	input wire[`RegBus]			   mem_wdata_i,
 	input wire[`RegAddrBus]       mem_wd_i,
 	
 	input wire[`RegBus]           reg1_data_i,
@@ -66,11 +69,20 @@ module id(
   wire[`RegBus] pc_plus_4;
   wire[`RegBus] imm_sll2_signedext;  
   
+  reg stallreq_for_reg1_loadrelate;
+  reg stallreq_for_reg2_loadrelate;
+  wire pre_inst_is_load;
+  
   assign pc_plus_8 = pc_i + 8;//保存当前后面第二条指令地址
   assign pc_plus_4 = pc_i +4;//保存当前后面第一条指令地址
   //分支指令中的offset左移两位，然后扩展32位
   assign imm_sll2_signedext = {{14{inst_i[15]}}, inst_i[15:0], 2'b00 };  
-  assign stallreq = `NoStop;
+  assign stallreq = stallreq_for_reg1_loadrelate | stallreq_for_reg2_loadrelate;
+  assign pre_inst_is_load = ((ex_aluop_i == `EXE_LB_OP) || 
+                                                      (ex_aluop_i == `EXE_LBU_OP)||
+                                                      (ex_aluop_i == `EXE_LW_OP)) ? 1'b1 : 1'b0;
+
+  assign inst_o = inst_i;
   
   assign inst_o = inst_i;
   
@@ -243,6 +255,16 @@ module id(
                         next_inst_in_delayslot_o <= `InDelaySlot;              
                     end
                 end 
+				`EXE_BNE:			begin
+                    wreg_o <= `WriteDisable;        aluop_o <= `EXE_BNE_OP;
+                    alusel_o <= `EXE_RES_JUMP_BRANCH; reg1_read_o <= 1'b1;    reg2_read_o <= 1'b1;
+                    instvalid <= `InstValid;    
+                    if(reg1_o != reg2_o) begin
+                        branch_target_address_o <= pc_plus_4 + imm_sll2_signedext;
+                        branch_flag_o <= `Branch;
+                        next_inst_in_delayslot_o <= `InDelaySlot;              
+                    end
+                end                
 				`EXE_LB:			begin
                     wreg_o <= `WriteEnable;        aluop_o <= `EXE_LB_OP;
                     alusel_o <= `EXE_RES_LOAD_STORE; reg1_read_o <= 1'b1;    reg2_read_o <= 1'b0;          

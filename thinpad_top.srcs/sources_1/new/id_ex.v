@@ -38,10 +38,11 @@ module id_ex(
 	output reg[`RegBus]           ex_link_address,
     output reg                    ex_is_in_delayslot,
     output reg                    is_in_delayslot_o,
-    output reg[`RegBus]           ex_inst,
-    output wire[`DebugBus]        debugdata 
+    output reg[`RegBus]           ex_inst,	    
+	output wire[`DebugBus]        debugdata 
 );
-    assign debugdata = {ex_reg1[7:0],ex_reg2[7:0]};
+    assign debugdata = {id_aluop[7:0],id_reg1[7:0],id_reg2[7:0]};
+
 	always @ (posedge clk) begin
 		if (rst == `RstEnable) begin
 			ex_aluop <= `EXE_NOP_OP;
