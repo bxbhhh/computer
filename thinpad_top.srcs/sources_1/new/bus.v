@@ -61,9 +61,7 @@ module bus(
      output reg[20:0] button_buff,
      
      output wire[`DebugBus] busdebugdata
-    
 );
-    assign busdebugdata = {if_addr_i[7:0],mem_data_i[15:0]};
     reg[31:0] uart_data_buff;
     
     
@@ -74,7 +72,7 @@ module bus(
     reg[3:0]        sram_sel_o;
     reg[`RegBus]    sram_data_i;
     reg             sram_no;
-
+    assign busdebugdata = {if_addr_i[7:0],sram_no,if_addr_i[22],if_ce_i,mem_ce_i,mem_we_i,sram_ce_o,sram_we_o,sram_data_i[8:0]};
     
 /*   always @ (posedge clk) begin
        if (button_buff > 0) begin

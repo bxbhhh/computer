@@ -121,6 +121,41 @@ assign leds[15:0] = debugdata[15:0];
   wire[3:0] mem_sel_i;  
   wire mem_ce_i;    
   
+  reg ce;
+  reg oe;
+  reg we;
+//  assign base_ram_ce_n = ce;
+//  assign base_ram_oe_n = oe;
+//  assign base_ram_we_n = we;
+//  assign base_ram_be_n = 4'b0;
+//  assign base_ram_addr = 20'b0;
+//  assign base_ram_data = 32'bz;
+  
+  assign uart_rdn = 1'b1;
+  assign uart_wrn = 1'b1;
+//     always @(*) begin
+//         case(dip_sw[5:0])
+//             6'b101000 : begin
+//                         ce <= 1'b1;
+//                         oe <= 1'b1;
+//                         we <= 1'b1;
+//             end
+//             6'b001000 : begin
+//                ce <= 1'b0;
+//                oe <= 1'b0;
+//                we <= 1'b1;
+//             end
+//             6'b001001: begin
+//                 debugdata <= {base_ram_addr,base_ram_ce_n,base_ram_oe_n,base_ram_we_n,1'b0};
+//             end
+//             6'b001010: begin
+//                 debugdata <= {base_ram_be_n,base_ram_data[19:0]};
+
+//             end
+//         endcase
+//     end
+     
+    
   //Àý»¯´¦ÀíÆ÷cpu
   cpu cpu0(
   .clk(clock_btn),

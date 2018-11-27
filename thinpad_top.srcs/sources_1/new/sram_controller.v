@@ -23,10 +23,11 @@ module sram_controller(
     input wire[31:0]    reg_in,   //just for probe to debug 
     input wire[31:0]    pc,
     input wire[31:0]    inst,
-    input wire[5:0]     stall
-
-
+    input wire[5:0]     stall,
+    output wire[`DebugBus] debugdata
 );
+    assign debugdata = {sram_addr[19:0],sram_ce_n,sram_oe_n,sram_we_n,1'b0};
+    
     assign sram_addr = addr_i;
     assign sram_ce_n = ~ce_i;
     assign sram_oe_n = ~(ce_i & (~we_i));

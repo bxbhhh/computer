@@ -54,6 +54,9 @@ module cpu(
     wire[`DebugBus] ctrldebugdata ;
     wire[`DebugBus] ex_memdebugdata ;
     wire[`DebugBus] busdebugdata;
+    wire[`DebugBus] baseramdebugdata;
+    wire[`DebugBus] extramdebugdata;
+    wire[`DebugBus] memdebugdata_hi;
     always @(*) begin
         case(debug[5:0])
             6'b000000: begin
@@ -68,6 +71,9 @@ module cpu(
             6'b000011: begin
                 debugdata <= memdebugdata ;
             end
+            6'b100011: begin
+                 debugdata <= memdebugdata_hi ;
+            end
             6'b000100: begin
                 debugdata <= wbdebugdata ;
             end           
@@ -76,6 +82,18 @@ module cpu(
             end
             6'b000110: begin
                 debugdata <= busdebugdata;
+            end
+            6'b000111: begin
+                debugdata <= baseramdebugdata;
+            end
+            6'b001000: begin
+                debugdata <= extramdebugdata;
+            end
+            6'b001001: begin
+                debugdata <= {base_ram_addr,base_ram_ce_n,base_ram_oe_n,base_ram_we_n,1'b0};
+            end
+            6'b001010: begin
+                debugdata <= {base_ram_be_n,base_ram_data[19:0]};
             end
             default: begin
                 debugdata <= regdebugdata ;
@@ -379,7 +397,8 @@ module cpu(
         .mem_sel_o(mem_ram_sel),
         .mem_data_o(mem_ram_data_intoram),
         .mem_ce_o(mem_ram_ce),
-        .debugdata(memdebugdata)     
+        .debugdata(memdebugdata),
+        .debugdatanew(memdebugdata_hi) 
         );
 
   //MEM/WBÄ£¿é
@@ -424,14 +443,14 @@ module cpu(
     
     wire base_ram_ce;
     wire base_ram_we;
-    wire[19:0] base_ram_addr;
+    wire[19:0] base_ram_addr_bus;
     wire[31:0] base_ram_data_o;
     wire[31:0] base_ram_data_i;
     wire[3:0] base_ram_sel;
     
     wire ext_ram_ce;
     wire ext_ram_we;
-    wire[19:0] ext_ram_addr;
+    wire[19:0] ext_ram_addr_bus;
     wire[31:0] ext_ram_data_o;
     wire[31:0] ext_ram_data_i;
     wire[3:0] ext_ram_sel;
@@ -458,13 +477,13 @@ bus bus0(
 
         .base_ram_ce_o(base_ram_ce),
         .base_ram_we_o(base_ram_we),
-        .base_ram_addr_o(base_ram_addr),
+        .base_ram_addr_o(base_ram_addr_bus),
         .base_ram_sel_o(base_ram_sel),
         .base_ram_data_o(base_ram_data_o),
         .base_ram_data_i(base_ram_data_i),
         .ext_ram_ce_o(ext_ram_ce),
         .ext_ram_we_o(ext_ram_we),
-        .ext_ram_addr_o(ext_ram_addr),
+        .ext_ram_addr_o(ext_ram_addr_bus),
         .ext_ram_sel_o(ext_ram_sel),
         .ext_ram_data_o(ext_ram_data_o),
         .ext_ram_data_i(ext_ram_data_i),
@@ -491,7 +510,7 @@ bus bus0(
     
         sram_controller ext_sram_controller(
             .clk(clk),
-            .addr_i(ext_ram_addr),
+            .addr_i(ext_ram_addr_bus),
             .data_i(ext_ram_data_o),
             .ce_i(ext_ram_ce),
             .we_i(ext_ram_we),
@@ -504,6 +523,7 @@ bus bus0(
             .sram_oe_n(ext_ram_oe_n),
             .sram_we_n(ext_ram_we_n),
             .sram_be_n(ext_ram_be_n),
+            .debugdata(extramdebugdata),
             
             // ====== debug ======
             .pc(if_pc),
@@ -514,7 +534,7 @@ bus bus0(
     
     sram_controller base_sram_controller(
         .clk(clk),
-        .addr_i(base_ram_addr),
+        .addr_i(base_ram_addr_bus),
         .data_i(base_ram_data_o),
         .ce_i(base_ram_ce),
         .we_i(base_ram_we),
@@ -527,6 +547,7 @@ bus bus0(
         .sram_oe_n(base_ram_oe_n),
         .sram_we_n(base_ram_we_n),
         .sram_be_n(base_ram_be_n),
+        .debugdata(baseramdebugdata),
         // ====== debug ======
         .pc(if_pc),
         .inst(if_inst),

@@ -22,7 +22,7 @@ module if_id(
 	input wire[5:0]               stall,
 	output wire[`DebugBus] debugdata
  );
-    assign debugdata = {if_pc[7:0],if_inst[15:0]};
+    assign debugdata = {if_pc[7:0],id_inst[15:0]};
 
 	always @ (posedge clk) begin
 		if (rst == `RstEnable) begin
@@ -33,7 +33,7 @@ module if_id(
             id_inst <= `ZeroWord;    
         end else if(stall[1] == `NoStop) begin
             id_pc <= if_pc;
-            id_inst <= if_inst;
+            id_inst <= {if_inst[7:0],if_inst[15:8],if_inst[23:16],if_inst[31:24]};
         end
     end
 
