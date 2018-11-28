@@ -152,12 +152,24 @@ assign leds[15:0] = debugdata[15:0];
 //             end
 //         endcase
 //     end
-     
+wire locked, clk_10M, clk_20M;
+pll_example clock_gen 
+ (
+  // Clock out ports
+  .clk_out1(clk_10M), // 时钟输出1，频率在IP配置界面中设置
+  .clk_out2(clk_20M), // 时钟输出2，频率在IP配置界面中设置
+  // Status and control signals
+  .reset(reset_btn), // PLL复位输入
+  .locked(locked), // 锁定输出，"1"表示时钟稳定，可作为后级电路复位
+ // Clock in ports
+  .clk_in1(clk_50M) // 外部时钟输入
+ );
+
     
   //例化处理器cpu
   cpu cpu0(
-    .clk_uart(clk_11M0592),
-    .clk(clk_11M0592),
+    .clk_uart(clk_50M),
+    .clk(clock_btn),
     .rst(reset_btn),
 
   

@@ -101,7 +101,7 @@ module cpu(
             end
             6'b110000: begin
                 debugdata <= {uart_TxD_data,uart_RxD_data,RxD,7'b0};
-                        end
+            end
             default: begin
                 debugdata <= regdebugdata ;
             end
@@ -564,7 +564,7 @@ bus bus0(
                 
     );
     
-    async_transmitter #(.ClkFrequency(11059200),.Baud(115200))
+    async_transmitter #(.ClkFrequency(50000000),.Baud(9600))
         async_transmitter0(
         .clk(clk_uart),
         .TxD_start(uart_TxD_start),
@@ -573,7 +573,7 @@ bus bus0(
         .TxD(TxD)
 
     );
-    async_receiver #(.ClkFrequency(11059200),.Baud(115200))
+    async_receiver #(.ClkFrequency(50000000),.Baud(9600))
         async_receiver0(
         .clk(clk_uart),
         .RxD(RxD),
