@@ -13,18 +13,8 @@ module cpu(
 
         input   wire                                                                            clk,
         input wire                                                                              rst,
+            input wire              clk_uart,
         
- 
-//      input wire[`RegBus]           rom_data_i,
-//      output wire[`RegBus]           rom_addr_o,
-//      output wire                    rom_ce_o,
-//    //连接数据存储器data_ram
-//    input wire[`RegBus]           ram_data_i,
-//    output wire[`RegBus]           ram_addr_o,
-//    output wire[`RegBus]           ram_data_o,
-//    output wire                    ram_we_o,
-//    output wire[3:0]               ram_sel_o,
-//    output wire[3:0]               ram_ce_o,
     
     // base sram
     inout wire[31:0]        base_ram_data,
@@ -42,7 +32,11 @@ module cpu(
     output wire             ext_ram_we_n,
     output wire[3:0]        ext_ram_be_n,
     
-        input wire[5:0] debug,
+    // uart
+    output TxD,
+    input RxD,
+    
+    input wire[5:0] debug,
     output reg[`DebugBus] debugdata
 );
     wire[`DebugBus] ifdebugdata ;
@@ -57,6 +51,16 @@ module cpu(
     wire[`DebugBus] baseramdebugdata;
     wire[`DebugBus] extramdebugdata;
     wire[`DebugBus] memdebugdata_hi;
+    
+    //============== UART ==============
+        wire                uart_RxD_data_ready;
+        wire[7:0]           uart_RxD_data;
+        wire                uart_rdn;
+        wire                uart_TxDready;
+        wire                uart_TxD_start;
+        wire[7:0]           uart_TxD_data;
+    
+    
     always @(*) begin
         case(debug[5:0])
             6'b000000: begin
@@ -95,6 +99,9 @@ module cpu(
             6'b001010: begin
                 debugdata <= {base_ram_be_n,base_ram_data[19:0]};
             end
+            6'b110000: begin
+                debugdata <= {uart_TxD_data,uart_RxD_data,RxD,7'b0};
+                        end
             default: begin
                 debugdata <= regdebugdata ;
             end
@@ -455,13 +462,7 @@ module cpu(
     wire[31:0] ext_ram_data_i;
     wire[3:0] ext_ram_sel;
     
-    //============== UART ==============
-    wire                uart_RxD_data_ready;
-    wire[7:0]           uart_RxD_data;
-    wire                uart_rdn;
-    wire                uart_TxDready;
-    wire                uart_TxD_start;
-    wire[7:0]           uart_TxD_data;
+    
     
 bus bus0(
         .clk(clk),
@@ -563,18 +564,18 @@ bus bus0(
                 
     );
     
-        async_transmitter #(.ClkFrequency(10000000),.Baud(9600))
+    async_transmitter #(.ClkFrequency(11059200),.Baud(115200))
         async_transmitter0(
-        .clk(clk),
+        .clk(clk_uart),
         .TxD_start(uart_TxD_start),
         .TxD_data(uart_TxD_data),
         .TxDready(uart_TxDready),
         .TxD(TxD)
 
     );
-    async_receiver #(.ClkFrequency(10000000),.Baud(9600))
+    async_receiver #(.ClkFrequency(11059200),.Baud(115200))
         async_receiver0(
-        .clk(clk),
+        .clk(clk_uart),
         .RxD(RxD),
         .RxD_data_ready(uart_RxD_data_ready),
         .RxD_data(uart_RxD_data),

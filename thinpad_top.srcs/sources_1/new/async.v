@@ -23,7 +23,7 @@ module async_transmitter(
 // Assert TxD_start for (at least) one clock cycle to start transmission of TxD_data
 // TxD_data is latched so that it doesn't have to stay valid while it is being sent
 
-parameter ClkFrequency = 25000000;	// 25MHz
+parameter ClkFrequency = 11059200;	// 25MHz
 parameter Baud = 115200;
 
 generate
@@ -85,15 +85,17 @@ module async_receiver(
     output RxD_idle,  // asserted when no data has been received for a while
     output reg RxD_endofpacket = 0  // asserted for one clock cycle when a packet has been detected (i.e. RxD_idle is going high)
 );
-parameter ClkFrequency = 25000000; // 25MHz
+parameter ClkFrequency = 11059200; // 25MHz
 parameter Baud = 115200;
 parameter Oversampling = 8;  // needs to be a power of 2
 // we oversample the RxD line at a fixed rate to capture each RxD data bit at the "right" time
 // 8 times oversampling by default, use 16 for higher quality reception
+
 generate
     if(ClkFrequency<Baud*Oversampling) ASSERTION_ERROR PARAMETER_OUT_OF_RANGE("Frequency too low for current Baud rate and oversampling");
     if(Oversampling<8 || ((Oversampling & (Oversampling-1))!=0)) ASSERTION_ERROR PARAMETER_OUT_OF_RANGE("Invalid oversampling value");
 endgenerate
+
 ////////////////////////////////
 reg [3:0] RxD_state = 0;
 `ifdef SIMULATION
@@ -174,7 +176,7 @@ module BaudTickGen(
 	input clk, enable,
 	output tick  // generate a tick at the specified baud rate * oversampling
 );
-parameter ClkFrequency = 25000000;
+parameter ClkFrequency = 11059200;
 parameter Baud = 115200;
 parameter Oversampling = 1;
 

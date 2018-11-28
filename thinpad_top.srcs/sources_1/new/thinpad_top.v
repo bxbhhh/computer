@@ -131,8 +131,6 @@ assign leds[15:0] = debugdata[15:0];
 //  assign base_ram_addr = 20'b0;
 //  assign base_ram_data = 32'bz;
   
-  assign uart_rdn = 1'b1;
-  assign uart_wrn = 1'b1;
 //     always @(*) begin
 //         case(dip_sw[5:0])
 //             6'b101000 : begin
@@ -158,8 +156,9 @@ assign leds[15:0] = debugdata[15:0];
     
   //Àý»¯´¦ÀíÆ÷cpu
   cpu cpu0(
-  .clk(clock_btn),
-  .rst(reset_btn),
+    .clk_uart(clk_11M0592),
+    .clk(clk_11M0592),
+    .rst(reset_btn),
 
   
    .base_ram_data(base_ram_data),
@@ -175,6 +174,9 @@ assign leds[15:0] = debugdata[15:0];
    .ext_ram_oe_n(ext_ram_oe_n),
    .ext_ram_we_n(ext_ram_we_n),
    .ext_ram_be_n(ext_ram_be_n),
+   
+   .TxD(txd),
+   .RxD(rxd),
   //debug
     .debug(dip_sw[5:0]),
     .debugdata(debugdata)  

@@ -72,7 +72,7 @@ module bus(
     reg[3:0]        sram_sel_o;
     reg[`RegBus]    sram_data_i;
     reg             sram_no;
-    assign busdebugdata = {if_addr_i[7:0],sram_no,if_addr_i[22],if_ce_i,mem_ce_i,mem_we_i,sram_ce_o,sram_we_o,sram_data_i[8:0]};
+    assign busdebugdata = {if_addr_i[7:0],mem_data_i[15:0]};
     
 /*   always @ (posedge clk) begin
        if (button_buff > 0) begin
@@ -125,9 +125,8 @@ module bus(
                 if (mem_addr_i == 32'h1FD003F8/*hbfd003f8*/) begin // UART
                     vga_ce_o <= 1'b0;
                     sram_ce_o <= 1'b0;
-                    if (mem_we_i == 1'b1) begin
+                    if (mem_we_i == 1'b1) begin         //如果ram不可写
                         if_stallreq_o <= `Stop;//Be careful!!!!!!!!!!!!!!!! this may be to be deleted
-//                       if_stallreq_o <= `NoStop;
                         mem_stallreq_o <= `NoStop;
                         if_data_o <= 32'h0;
                         mem_data_o <= 32'h0;
@@ -135,11 +134,10 @@ module bus(
                         uart_TxD_start_o <= 1'b1;
                         uart_TxD_data_o <= mem_data_i[7:0];
                         uart_RxD_rdn_o <= 1'b1;
-                    end else if (mem_we_i == 1'b0) begin
+                    end else if (mem_we_i == 1'b0) begin        //ram可写
                         if_stallreq_o <= `Stop;//Be careful!!!!!!!!!!!!!!!! this may be to be deleted
-//                        if_stallreq_o <= `NoStop;
                         mem_stallreq_o <= `NoStop;
-                        if_data_o <= 32'h0;
+                        if_data_o <= 32'h0;     //nop
                         mem_data_o <= 32'h0;
                         
                         uart_TxD_start_o <= 1'b0;
