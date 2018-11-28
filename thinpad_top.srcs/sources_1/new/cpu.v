@@ -455,6 +455,14 @@ module cpu(
     wire[31:0] ext_ram_data_i;
     wire[3:0] ext_ram_sel;
     
+    //============== UART ==============
+    wire                uart_RxD_data_ready;
+    wire[7:0]           uart_RxD_data;
+    wire                uart_rdn;
+    wire                uart_TxDready;
+    wire                uart_TxD_start;
+    wire[7:0]           uart_TxD_data;
+    
 bus bus0(
         .clk(clk),
         .rst(rst),
@@ -495,16 +503,16 @@ bus bus0(
 //        .vga_addr_o(vga_waddr),
 //        .touch_btn(touch_btn),
         // ======= debug ===========
-        .pc(if_pc)
+        .pc(if_pc),
 //        .button_buff(btnbuff),
 
 
-//        .uart_RxD_dataready_i(uart_RxD_data_ready),
-//        .uart_RxD_data_i(uart_RxD_data),
-//        .uart_RxD_rdn_o(uart_rdn),
-//        .uart_TxD_ready_i(uart_TxDready),
-//        .uart_TxD_start_o(uart_TxD_start),
-//        .uart_TxD_data_o(uart_TxD_data)
+        .uart_RxD_dataready_i(uart_RxD_data_ready),
+        .uart_RxD_data_i(uart_RxD_data),
+        .uart_RxD_rdn_o(uart_rdn),
+        .uart_TxD_ready_i(uart_TxDready),
+        .uart_TxD_start_o(uart_TxD_start),
+        .uart_TxD_data_o(uart_TxD_data)
 
     );
     
@@ -554,4 +562,24 @@ bus bus0(
         .stall(stall)
                 
     );
+    
+        async_transmitter #(.ClkFrequency(10000000),.Baud(9600))
+        async_transmitter0(
+        .clk(clk),
+        .TxD_start(uart_TxD_start),
+        .TxD_data(uart_TxD_data),
+        .TxDready(uart_TxDready),
+        .TxD(TxD)
+
+    );
+    async_receiver #(.ClkFrequency(10000000),.Baud(9600))
+        async_receiver0(
+        .clk(clk),
+        .RxD(RxD),
+        .RxD_data_ready(uart_RxD_data_ready),
+        .RxD_data(uart_RxD_data),
+        .rdn(uart_rdn)
+
+    );
+    
 endmodule
