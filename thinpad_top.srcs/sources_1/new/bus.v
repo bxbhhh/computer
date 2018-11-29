@@ -8,36 +8,38 @@ module bus(
     input wire[5:0]     stall_i,
     // input wire          flush_i,
 
-    input wire          if_ce_i,
-    input wire[`RegBus] if_addr_i,
-    output reg[`RegBus] if_data_o,
-    output reg          if_stallreq_o,
+    input wire          if_ce_i,    //取指控制使能，低有效
+    input wire[`RegBus] if_addr_i,  //取指地址
+    output reg[`RegBus] if_data_o,  //取指得到的数据，取到的指令
+    output reg          if_stallreq_o,  //取指相关控制
 
-    input wire          mem_ce_i,
-    input wire[`RegBus] mem_data_i,
-    input wire[`RegBus] mem_addr_i,
-    input wire          mem_we_i,
-    input wire[3:0]     mem_sel_i,
-    output reg[`RegBus] mem_data_o,
+    input wire          mem_ce_i,   //访存控制使能，低有效
+    input wire[`RegBus] mem_data_i, //访存写入数据，用来写入内存的数据
+    input wire[`RegBus] mem_addr_i, //内存的地址
+    input wire          mem_we_i,   //读取内存的使能信号
+    input wire[3:0]     mem_sel_i,  //？？？？？
+    output reg[`RegBus] mem_data_o, //从内存读出的数据
     
-    output reg          mem_stallreq_o,
+    output reg          mem_stallreq_o, //内存相关控制信号
+    
     //UART
-    input wire uart_RxD_dataready_i,
-    input wire[7:0] uart_RxD_data_i,
-    output reg uart_RxD_rdn_o,
-    
-    input wire uart_TxD_ready_i,
-    output reg uart_TxD_start_o,
-    output reg[7:0] uart_TxD_data_o,
+    //读取串口相关
+    input wire uart_RxD_dataready_i,    //读取串口，数据准备完毕
+    input wire[7:0] uart_RxD_data_i,    //读取串口得到的的数据，8位
+    output reg uart_RxD_rdn_o,      //？？？？？
+    //写入串口相关
+    input wire uart_TxD_ready_i,    //写入串口准备完毕
+    output reg uart_TxD_start_o,    //写入串口开始信号，
+    output reg[7:0] uart_TxD_data_o,    //写入串口的数据
 
 
     // base sram
-    output reg          base_ram_ce_o,
-    output reg          base_ram_we_o,
-    output reg[19:0]    base_ram_addr_o,
-    output reg[`RegBus] base_ram_data_o,
-    output reg[3:0]     base_ram_sel_o,
-    input wire[`RegBus] base_ram_data_i,
+    output reg          base_ram_ce_o,  //baseram控制使能
+    output reg          base_ram_we_o,  //baseram写使能
+    output reg[19:0]    base_ram_addr_o,    //baseram地址
+    output reg[`RegBus] base_ram_data_o,    //写入baseram的数据
+    output reg[3:0]     base_ram_sel_o,     //？？？？？
+    input wire[`RegBus] base_ram_data_i,    //从baseram读取到的地址
     
     // ext sram 
     output reg          ext_ram_ce_o,
@@ -52,9 +54,6 @@ module bus(
     output reg          vga_ce_o,
     output reg          vga_we_o,
     output reg[23:0]    vga_addr_o,
-
-    // touch button
-    input wire[5:0]     touch_btn,
             
     // ======= debug ==========
      input wire[31:0] pc,
@@ -62,7 +61,7 @@ module bus(
      
      output wire[`DebugBus] busdebugdata
 );
-    reg[31:0] uart_data_buff;
+    reg[31:0] uart_data_buff;   //串口数据缓冲区
     
     
     reg             sram_ce_o;
@@ -74,23 +73,7 @@ module bus(
     reg             sram_no;
     assign busdebugdata = {mem_addr_i[31:24],mem_addr_i[15:0]};
     
-/*   always @ (posedge clk) begin
-       if (button_buff > 0) begin
-           button_buff <= button_buff - 1;
-       end
-   end*/
     
-    
-    
-      
-//            .probe2(uart_TxD_start_o),
-//            .probe3(uart_TxD_data_o),
-//            .probe4(uart_RxD_rdn_o),
-//            .probe5(uart_RxD_dataready_i),
-//            .probe6(uart_TxD_ready_i),
-            
-        //    .probe8(mem_data_o));
-//            .probe9(uart_RxD_data_i));
         
     always @ (*) begin
         uart_TxD_start_o <= 1'b0;
@@ -151,31 +134,10 @@ module bus(
                     if_stallreq_o <= `Stop;//Be careful!!!!!!!!!!!!!!!! this may be to be deleted
                     uart_RxD_rdn_o <= 1'b1;//not read
                     uart_TxD_start_o <= 1'b0;//not write
-                    mem_data_o[31:2] <= 30'b0;
-                    mem_data_o[1] <= uart_RxD_dataready_i;
-                    mem_data_o[0] <= uart_TxD_ready_i;
-                    vga_ce_o <= 1'b0;
+                    mem_data_o[31:26] <= 6'b0;
+                    mem_data_o[25] <= uart_RxD_dataready_i;
+                    mem_data_o[24] <= uart_TxD_ready_i;
                     sram_ce_o <= 1'b0;
-                end else if (mem_addr_i[31:24] == 8'h1D) begin // vga mem
-                    if_stallreq_o <= `Stop;
-                    mem_stallreq_o <= `NoStop;
-                    uart_RxD_rdn_o <= 1'b1;
-                    uart_TxD_start_o <=1'b0;
-                    sram_ce_o <= 1'b0;
-
-                    vga_ce_o <= 1'b1;
-                    vga_we_o <= mem_we_i;
-                    vga_addr_o <= mem_addr_i[23:0];
-                    vga_data_o <= mem_data_i;
-                    mem_data_o <= 32'h0;
-                   
-                end else if (mem_addr_i[31:24] == 8'h1C) begin // touch button
-                    if_stallreq_o       <= `Stop;
-                    uart_RxD_rdn_o      <= 1'b1;
-                    uart_TxD_start_o    <= 1'b0;         
-                    sram_ce_o           <= 1'b0;
-                    vga_ce_o            <= 1'b0;
-                    mem_data_o <= {26'b0000_0000_0000_0000_0000_0000_00, touch_btn[5:0]};
 
                 end else begin//Read or Write in Sram
                     if_stallreq_o <= `Stop;

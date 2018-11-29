@@ -12,12 +12,12 @@
 ////////////////////////////////////////////////////////
 `default_nettype wire
 module async_transmitter(
-	input clk,
-	input TxD_start,
-	input [7:0] TxD_data,
-	output TxD,
-	output wire TxDready,
-	output TxD_busy
+	input clk, //时钟
+	input TxD_start,   //写入串口，开始信号
+	input [7:0] TxD_data,  //写入串口的数据
+	output TxD,    //串口传输数据线
+	output wire TxDready,  //写入准备完毕
+	output TxD_busy    //串口传输数据正忙
 );
 
 // Assert TxD_start for (at least) one clock cycle to start transmission of TxD_data
@@ -62,8 +62,8 @@ begin
 		4'b1101: if(BitTick) TxD_state <= 4'b1110;  // bit 5
 		4'b1110: if(BitTick) TxD_state <= 4'b1111;  // bit 6
 		4'b1111: if(BitTick) TxD_state <= 4'b0010;  // bit 7
-		4'b0010: if(BitTick) TxD_state <= 4'b0011;  // stop1
-		//4'b0011: if(BitTick) TxD_state <= 4'b0000;  // stop2
+		4'b0010: if(BitTick) TxD_state <= 4'b0000;  // stop1
+		4'b0011: if(BitTick) TxD_state <= 4'b0000;  // stop2
 		default: if(BitTick) TxD_state <= 4'b0000;
 	endcase
 end

@@ -73,10 +73,10 @@ module cpu(
                 debugdata <= exdebugdata ;
             end
             6'b000011: begin
-                debugdata <= memdebugdata ;
+                debugdata <= memdebugdata ;     //访问内存的debug信息，数码管显示低8位的输入数据，二极管显示低16位的输入地址
             end
             6'b100011: begin
-                 debugdata <= memdebugdata_hi ;
+                 debugdata <= memdebugdata_hi ; //访问内存的debug信息，数码管显示15-8位的输入数据，二极管显示高16位的输入地址
             end
             6'b000100: begin
                 debugdata <= wbdebugdata ;
@@ -85,7 +85,7 @@ module cpu(
                 debugdata <= ctrldebugdata ;
             end
             6'b000110: begin
-                debugdata <= busdebugdata;
+                debugdata <= busdebugdata;  //总线调试信息，数码管输入地址的高8位，二极管输入地址低16位
             end
             6'b000111: begin
                 debugdata <= baseramdebugdata;
@@ -502,7 +502,6 @@ bus bus0(
 //        .vga_ce_o(vga_ce),
 //        .vga_we_o(vga_we),
 //        .vga_addr_o(vga_waddr),
-//        .touch_btn(touch_btn),
         // ======= debug ===========
         .pc(if_pc),
 //        .button_buff(btnbuff),
@@ -517,7 +516,7 @@ bus bus0(
 
     );
     
-        sram_controller ext_sram_controller(
+    sram_controller ext_sram_controller(
             .clk(clk),
             .addr_i(ext_ram_addr_bus),
             .data_i(ext_ram_data_o),
@@ -571,7 +570,6 @@ bus bus0(
         .TxD_data(uart_TxD_data),
         .TxDready(uart_TxDready),
         .TxD(TxD)
-
     );
     async_receiver #(.ClkFrequency(50000000),.Baud(9600))
         async_receiver0(
