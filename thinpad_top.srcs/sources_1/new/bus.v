@@ -72,7 +72,7 @@ module bus(
     reg[3:0]        sram_sel_o;
     reg[`RegBus]    sram_data_i;
     reg             sram_no;
-    assign busdebugdata = {if_addr_i[7:0],mem_data_i[15:0]};
+    assign busdebugdata = {mem_addr_i[31:24],mem_addr_i[15:0]};
     
 /*   always @ (posedge clk) begin
        if (button_buff > 0) begin
