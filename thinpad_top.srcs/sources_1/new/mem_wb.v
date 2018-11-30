@@ -27,7 +27,7 @@ module mem_wb(
 	output reg[`RegBus]					 wb_wdata,	       
 	output wire[`DebugBus]        debugdata       
 );
-    assign debugdata = {3'b0,mem_wd[4:0],mem_wdata[15:0]};
+    assign debugdata = {3'b0,wb_wd[4:0],wb_wdata[15:0]};
 
 
 	always @ (posedge clk) begin
@@ -39,7 +39,8 @@ module mem_wb(
               wb_wd <= `NOPRegAddr;
               wb_wreg <= `WriteDisable;
               wb_wdata <= `ZeroWord;		  	
-		end else begin
+//		end else begin
+		end else if (stall[4] == `NoStop) begin  
 			wb_wd <= mem_wd;
 			wb_wreg <= mem_wreg;
 			wb_wdata <= mem_wdata;

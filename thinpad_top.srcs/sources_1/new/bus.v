@@ -21,7 +21,7 @@ module bus(
     output reg[`RegBus] mem_data_o, //从内存读出的数据
     
     output reg          mem_stallreq_o, //内存相关控制信号
-    
+    output reg          mem_stallreq_o2,
     //UART
     //读取串口相关
     input wire uart_RxD_dataready_i,    //读取串口，数据准备完毕
@@ -71,7 +71,7 @@ module bus(
     reg[3:0]        sram_sel_o;
     reg[`RegBus]    sram_data_i;
     reg             sram_no;
-    assign busdebugdata = {mem_addr_i[31:24],mem_addr_i[15:0]};
+    assign busdebugdata = {mem_addr_i[31:16],mem_addr_i[7:0]};
     
     
         
@@ -81,6 +81,7 @@ module bus(
         uart_RxD_rdn_o <= 1'b1;//1 means not  
         if_stallreq_o <= `NoStop;
         mem_stallreq_o <= `NoStop;
+        mem_stallreq_o2 <= `NoStop;
         if_data_o <= 32'h0;
         mem_data_o <= 32'h0;
         sram_ce_o <= 1'b0;
@@ -96,6 +97,7 @@ module bus(
         if (rst == `RstEnable) begin
             if_stallreq_o <= `NoStop;
             mem_stallreq_o <= `NoStop;
+            mem_stallreq_o2 <= `NoStop;
             if_data_o <= 32'h0;
             mem_data_o <= 32'h0;
         // end else if (flush_i == 1'b1) begin
@@ -131,17 +133,21 @@ module bus(
                     end
                     
                 end else if (mem_addr_i == 32'h1FD003FC) begin // UART status
-                    if_stallreq_o <= `Stop;//Be careful!!!!!!!!!!!!!!!! this may be to be deleted
+                    mem_stallreq_o2 <= `NoStop;//Be careful!!!!!!!!!!!!!!!! this may be to be deleted
+                    mem_stallreq_o <= `NoStop;
+                    if_stallreq_o <= `Stop;
                     uart_RxD_rdn_o <= 1'b1;//not read
                     uart_TxD_start_o <= 1'b0;//not write
                     mem_data_o[31:26] <= 6'b0;
                     mem_data_o[25] <= uart_RxD_dataready_i;
                     mem_data_o[24] <= uart_TxD_ready_i;
                     sram_ce_o <= 1'b0;
+                    vga_ce_o <= 1'b0;
 
                 end else begin//Read or Write in Sram
                     if_stallreq_o <= `Stop;
                     mem_stallreq_o <= `NoStop;
+                    mem_stallreq_o2 <= `NoStop;
                     uart_RxD_rdn_o <= 1'b1;
                     uart_TxD_start_o <= 1'b0;
                     vga_ce_o <= 1'b0;

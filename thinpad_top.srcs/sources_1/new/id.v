@@ -316,42 +316,6 @@ module id(
 		end       //if
 	end         //always
 	
-
-	always @ (*) begin
-		if(rst == `RstEnable) begin
-			reg1_o <= `ZeroWord;		
-		end else if((reg1_read_o == 1'b1) && (ex_wreg_i == 1'b1) 
-								&& (ex_wd_i == reg1_addr_o)) begin
-			reg1_o <= ex_wdata_i; 
-		end else if((reg1_read_o == 1'b1) && (mem_wreg_i == 1'b1) 
-								&& (mem_wd_i == reg1_addr_o)) begin
-			reg1_o <= mem_wdata_i; 			
-	  end else if(reg1_read_o == 1'b1) begin
-	       reg1_o <= reg1_data_i;
-	  end else if(reg1_read_o == 1'b0) begin
-	       reg1_o <= imm;
-	  end else begin
-	       reg1_o <= `ZeroWord;
-	  end
-	end
-	
-	always @ (*) begin
-		if(rst == `RstEnable) begin
-			reg2_o <= `ZeroWord;
-		end else if((reg2_read_o == 1'b1) && (ex_wreg_i == 1'b1) 
-								&& (ex_wd_i == reg2_addr_o)) begin
-			reg2_o <= ex_wdata_i; 
-		end else if((reg2_read_o == 1'b1) && (mem_wreg_i == 1'b1) 
-								&& (mem_wd_i == reg2_addr_o)) begin
-			reg2_o <= mem_wdata_i;			
-	  end else if(reg2_read_o == 1'b1) begin
-	  	reg2_o <= reg2_data_i;
-	  end else if(reg2_read_o == 1'b0) begin
-	  	reg2_o <= imm;
-	  end else begin
-	    reg2_o <= `ZeroWord;
-	  end
-	end
 	
 	always @ (*) begin
         if(rst == `RstEnable) begin
@@ -360,5 +324,44 @@ module id(
           is_in_delayslot_o <= is_in_delayslot_i;        
       end
     end	
-
+         always @ (*) begin
+            stallreq_for_reg1_loadrelate <= `NoStop;
+            if (rst == `RstEnable) begin
+                reg1_o <= 32'h0;
+            end else if ((pre_inst_is_load == 1'b1) && (ex_wd_i == reg1_addr_o) &&(reg1_read_o==1'b1) )begin
+                stallreq_for_reg1_loadrelate <= `Stop;
+            
+            end else if ((reg1_read_o == `ReadEnable) && (ex_wreg_i == `WriteEnable) && (ex_wd_i == reg1_addr_o)) begin
+                reg1_o <= ex_wdata_i;
+            end else if ((reg1_read_o == `ReadEnable) && (mem_wreg_i == `WriteEnable) && (ex_wd_i == reg1_addr_o)) begin
+                reg1_o <= ex_wdata_i;
+            end else if (reg1_read_o == `ReadEnable) begin
+                reg1_o <= reg1_data_i;
+            end else if (reg1_read_o == `ReadDisable) begin
+                reg1_o <= imm; // 操作数为立即????????
+            end else begin
+                reg1_o <= 32'h0;
+            end
+        end
+    
+        // 确定????????要输出的操作????????2
+        always @ (*) begin
+            stallreq_for_reg2_loadrelate <= `NoStop;
+            if (rst == `RstEnable) begin
+                reg2_o <= 32'h0;
+            end else if ((pre_inst_is_load == 1'b1) && (ex_wd_i == reg2_addr_o) &&(reg2_read_o==1'b1) )begin
+                stallreq_for_reg2_loadrelate <= `Stop;
+            end else if ((reg2_read_o == `ReadEnable) && (ex_wreg_i == `WriteEnable) && (ex_wd_i == reg2_addr_o)) begin
+                reg2_o <= ex_wdata_i;
+            end else if ((reg2_read_o == `ReadEnable) && (mem_wreg_i == `WriteEnable) && (ex_wd_i == reg2_addr_o)) begin
+                reg2_o <= ex_wdata_i;
+            end else if (reg2_read_o == `ReadEnable) begin
+                reg2_o <= reg2_data_i;
+            end else if (reg2_read_o == `ReadDisable) begin
+                reg2_o <= imm; // 操作数为立即????????
+            end else begin
+                reg2_o <= 32'h0;
+            end
+        end
+    
 endmodule

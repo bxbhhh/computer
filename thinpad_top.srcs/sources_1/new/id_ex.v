@@ -57,7 +57,11 @@ module id_ex(
             ex_reg1 <= `ZeroWord;
             ex_reg2 <= `ZeroWord;
             ex_wd <= `NOPRegAddr;
-            ex_wreg <= `WriteDisable;            
+            ex_wreg <= `WriteDisable;      
+            ex_link_address <= 32'h0;
+            ex_is_in_delayslot <= `NotInDelaySlot;
+            ex_inst <= `ZeroWord;   
+              
         end else if(stall[2] == `NoStop) begin        
             ex_aluop <= id_aluop;
             ex_alusel <= id_alusel;
@@ -69,7 +73,7 @@ module id_ex(
             ex_is_in_delayslot <= id_is_in_delayslot;
             is_in_delayslot_o <= next_inst_in_delayslot_i; 
             //没有暂停，则直接输出
-            ex_inst = id_inst;                       
+            ex_inst <= id_inst;                       
         end
     end
 	

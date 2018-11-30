@@ -124,6 +124,8 @@ assign leds[15:0] = debugdata[15:0];
   reg ce;
   reg oe;
   reg we;
+  assign uart_rdn = 1'b1;
+  assign uart_wrn = 1'b1;
 //  assign base_ram_ce_n = ce;
 //  assign base_ram_oe_n = oe;
 //  assign base_ram_we_n = we;
@@ -152,6 +154,8 @@ assign leds[15:0] = debugdata[15:0];
 //             end
 //         endcase
 //     end
+
+
 wire locked, clk_10M, clk_20M;
 pll_example clock_gen 
  (
@@ -169,7 +173,7 @@ pll_example clock_gen
   //Àý»¯´¦ÀíÆ÷cpu
   cpu cpu0(
     .clk_uart(clk_50M),
-    .clk(clock_btn),
+    .clk(clk_50M),
     .rst(reset_btn),
 
   

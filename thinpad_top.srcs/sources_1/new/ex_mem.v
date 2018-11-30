@@ -47,8 +47,12 @@ module ex_mem(
 		end else if(stall[3] == `Stop && stall[4] == `NoStop) begin
             mem_wd <= `NOPRegAddr;
             mem_wreg <= `WriteDisable;
-            mem_wdata <= `ZeroWord;                               
-        end else  begin
+            mem_wdata <= `ZeroWord;      
+            mem_aluop <= 8'b0;
+            mem_mem_addr <= `ZeroWord;
+            mem_reg2 <= `ZeroWord;                         
+//        end else  begin
+        end else if (stall[3] == `NoStop) begin
             mem_wd <= ex_wd;
             mem_wreg <= ex_wreg;
             mem_wdata <= ex_wdata;

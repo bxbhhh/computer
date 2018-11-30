@@ -194,6 +194,7 @@ module cpu(
     wire stallreq_from_id;    
     wire stallreq_from_ex;
     wire stallreq_from_mem;
+    wire stallreq_from_mem2;
     wire stallreq_from_if;
 
     wire[31:0]          mmu_if_addr;
@@ -433,6 +434,7 @@ module cpu(
         .stallreq_from_ex(stallreq_from_ex),
         //来自内存的暂停
         .stallreq_from_mem(stallreq_from_mem),
+        .stallreq_from_mem2(stallreq_from_mem2),
         .stallreq_from_if(stallreq_from_if),
         .stall(stall),
         .debugdata(ctrldebugdata)          
@@ -483,7 +485,7 @@ bus bus0(
         .mem_sel_i(mem_ram_sel),
         .mem_data_o(ram_mem_data_intomem),
         .mem_stallreq_o(stallreq_from_mem),
-
+        .mem_stallreq_o2(stallreq_from_mem2),
         .base_ram_ce_o(base_ram_ce),
         .base_ram_we_o(base_ram_we),
         .base_ram_addr_o(base_ram_addr_bus),
@@ -562,23 +564,24 @@ bus bus0(
         .stall(stall)
                 
     );
-    
+
     async_transmitter #(.ClkFrequency(50000000),.Baud(9600))
         async_transmitter0(
         .clk(clk_uart),
         .TxD_start(uart_TxD_start),
         .TxD_data(uart_TxD_data),
-        .TxDready(uart_TxDready),
+        .TxD_ready(uart_TxDready),
         .TxD(TxD)
     );
+    reg rxd_clear;
+    assign uart_rdn = ~rxd_clear;
     async_receiver #(.ClkFrequency(50000000),.Baud(9600))
         async_receiver0(
         .clk(clk_uart),
         .RxD(RxD),
         .RxD_data_ready(uart_RxD_data_ready),
         .RxD_data(uart_RxD_data),
-        .rdn(uart_rdn)
-
+        .RxD_clear(rxd_clear)
     );
-    
+   
 endmodule
