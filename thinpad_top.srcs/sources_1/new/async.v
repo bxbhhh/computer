@@ -16,7 +16,8 @@ module async_transmitter(
 	input TxD_start,
 	input [7:0] TxD_data,
 	output TxD,
-	output TxD_ready
+	output TxD_ready,
+	output over
 );
 
 // Assert TxD_start for (at least) one clock cycle to start transmission of TxD_data
@@ -34,7 +35,8 @@ wire TxD_busy;
 reg [3:0] TxD_state = 0;
 assign TxD_ready = (TxD_state==0);
 assign TxD_busy = ~TxD_ready;
-
+reg sendOver = 0;
+assign over = sendOver;
 `ifdef SIMULATION
 wire BitTick = 1'b1;  // output one bit per clock cycle
 `else
@@ -53,7 +55,10 @@ begin
 		TxD_shift <= (TxD_shift >> 1);
 
 	case(TxD_state)
-		4'b0000: if(TxD_start) TxD_state <= 4'b0100;
+		4'b0000: if(TxD_start) begin
+             TxD_state <= 4'b0100;  // stop1
+             sendOver <= 1'b0;
+        end
 		4'b0100: if(BitTick) TxD_state <= 4'b1000;  // start bit
 		4'b1000: if(BitTick) TxD_state <= 4'b1001;  // bit 0
 		4'b1001: if(BitTick) TxD_state <= 4'b1010;  // bit 1
@@ -63,7 +68,10 @@ begin
 		4'b1101: if(BitTick) TxD_state <= 4'b1110;  // bit 5
 		4'b1110: if(BitTick) TxD_state <= 4'b1111;  // bit 6
 		4'b1111: if(BitTick) TxD_state <= 4'b0010;  // bit 7
-		4'b0010: if(BitTick) TxD_state <= 4'b0000;  // stop1
+		4'b0010: if(BitTick) begin
+		  TxD_state <= 4'b0000;  // stop1
+		  sendOver <= 1'b1;
+		end
 		//4'b0011: if(BitTick) TxD_state <= 4'b0000;  // stop2
 		default: if(BitTick) TxD_state <= 4'b0000;
 	endcase

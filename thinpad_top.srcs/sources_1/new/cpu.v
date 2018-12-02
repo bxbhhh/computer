@@ -62,44 +62,44 @@ module cpu(
     
     
     always @(*) begin
-        case(debug[5:0])
-            6'b000000: begin
+        case(debug[4:0])
+            6'b00000: begin
                 debugdata <= ifdebugdata ;
             end
-            6'b000001: begin
+            6'b00001: begin
                 debugdata <= iddebugdata ;
             end
-            6'b000010: begin
+            6'b00010: begin
                 debugdata <= exdebugdata ;
             end
-            6'b000011: begin
+            6'b00011: begin
                 debugdata <= memdebugdata ;     //访问内存的debug信息，数码管显示低8位的输入数据，二极管显示低16位的输入地址
             end
-            6'b100011: begin
+            6'b10011: begin
                  debugdata <= memdebugdata_hi ; //访问内存的debug信息，数码管显示15-8位的输入数据，二极管显示高16位的输入地址
             end
-            6'b000100: begin
+            6'b00100: begin
                 debugdata <= wbdebugdata ;
             end           
-            6'b000101: begin
+            6'b00101: begin
                 debugdata <= ctrldebugdata ;
             end
-            6'b000110: begin
+            6'b00110: begin
                 debugdata <= busdebugdata;  //总线调试信息，数码管输入地址的高8位，二极管输入地址低16位
             end
-            6'b000111: begin
+            6'b00111: begin
                 debugdata <= baseramdebugdata;
             end
-            6'b001000: begin
+            6'b01000: begin
                 debugdata <= extramdebugdata;
             end
-            6'b001001: begin
+            6'b01001: begin
                 debugdata <= {base_ram_addr,base_ram_ce_n,base_ram_oe_n,base_ram_we_n,1'b0};
             end
-            6'b001010: begin
+            6'b01010: begin
                 debugdata <= {base_ram_be_n,base_ram_data[19:0]};
             end
-            6'b110000: begin
+            6'b01011: begin
                 debugdata <= {uart_TxD_data,uart_RxD_data,RxD,7'b0};
             end
             default: begin
@@ -564,18 +564,32 @@ bus bus0(
         .stall(stall)
                 
     );
+    
+//    reg real_start,real_over;
+//    always @(posedge clk)
+//    begin
+//        real_start <= uart_TxD_start;
+//    end
+    
+//    always @(*)
+//    begin
+//        if(real_over) begin
+//            real_start <= 1'b0;
+//        end
+//    end
 
-    async_transmitter #(.ClkFrequency(50000000),.Baud(9600))
+    async_transmitter #(.ClkFrequency(10000000),.Baud(9600))
         async_transmitter0(
         .clk(clk_uart),
         .TxD_start(uart_TxD_start),
         .TxD_data(uart_TxD_data),
         .TxD_ready(uart_TxDready),
         .TxD(TxD)
+//        .over(real_over)
     );
     reg rxd_clear;
     assign uart_rdn = ~rxd_clear;
-    async_receiver #(.ClkFrequency(50000000),.Baud(9600))
+    async_receiver #(.ClkFrequency(10000000),.Baud(9600))
         async_receiver0(
         .clk(clk_uart),
         .RxD(RxD),

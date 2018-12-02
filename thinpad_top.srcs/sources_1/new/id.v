@@ -84,8 +84,6 @@ module id(
 
   assign inst_o = inst_i;
   
-  assign inst_o = inst_i;
-  
 	always @ (*) begin	
 		if (rst == `RstEnable) begin
 			aluop_o <= `EXE_NOP_OP;
