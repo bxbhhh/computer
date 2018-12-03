@@ -138,9 +138,9 @@ module bus(
                     if_stallreq_o <= `Stop;
                     uart_RxD_rdn_o <= 1'b1;//not read
                     uart_TxD_start_o <= 1'b0;//not write
-                    mem_data_o[31:26] <= 6'b0;
-                    mem_data_o[25] <= uart_RxD_dataready_i;
-                    mem_data_o[24] <= uart_TxD_ready_i;
+                    mem_data_o[7:2] <= 6'b0;
+                    mem_data_o[1] <= uart_RxD_dataready_i;
+                    mem_data_o[0] <= uart_TxD_ready_i;
                     sram_ce_o <= 1'b0;
                     vga_ce_o <= 1'b0;
 

@@ -331,8 +331,8 @@ module id(
             
             end else if ((reg1_read_o == `ReadEnable) && (ex_wreg_i == `WriteEnable) && (ex_wd_i == reg1_addr_o)) begin
                 reg1_o <= ex_wdata_i;
-            end else if ((reg1_read_o == `ReadEnable) && (mem_wreg_i == `WriteEnable) && (ex_wd_i == reg1_addr_o)) begin
-                reg1_o <= ex_wdata_i;
+            end else if ((reg1_read_o == `ReadEnable) && (mem_wreg_i == `WriteEnable) && (mem_wd_i == reg1_addr_o)) begin
+                reg1_o <= mem_wdata_i;
             end else if (reg1_read_o == `ReadEnable) begin
                 reg1_o <= reg1_data_i;
             end else if (reg1_read_o == `ReadDisable) begin
@@ -351,8 +351,8 @@ module id(
                 stallreq_for_reg2_loadrelate <= `Stop;
             end else if ((reg2_read_o == `ReadEnable) && (ex_wreg_i == `WriteEnable) && (ex_wd_i == reg2_addr_o)) begin
                 reg2_o <= ex_wdata_i;
-            end else if ((reg2_read_o == `ReadEnable) && (mem_wreg_i == `WriteEnable) && (ex_wd_i == reg2_addr_o)) begin
-                reg2_o <= ex_wdata_i;
+            end else if ((reg2_read_o == `ReadEnable) && (mem_wreg_i == `WriteEnable) && (mem_wd_i == reg2_addr_o)) begin
+                reg2_o <= mem_wdata_i;
             end else if (reg2_read_o == `ReadEnable) begin
                 reg2_o <= reg2_data_i;
             end else if (reg2_read_o == `ReadDisable) begin
