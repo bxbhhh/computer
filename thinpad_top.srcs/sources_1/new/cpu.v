@@ -578,7 +578,7 @@ bus bus0(
 //        end
 //    end
 
-    async_transmitter #(.ClkFrequency(20000000),.Baud(9600))
+    async_transmitter #(.ClkFrequency(30000000),.Baud(9600))
         async_transmitter0(
         .clk(clk_uart),
         .TxD_start(uart_TxD_start),
@@ -588,7 +588,7 @@ bus bus0(
 //        .over(real_over)
     );
 
-    async_receiver #(.ClkFrequency(20000000),.Baud(9600))
+    async_receiver #(.ClkFrequency(30000000),.Baud(9600))
         async_receiver0(
         .clk(clk_uart),
         .RxD(RxD),

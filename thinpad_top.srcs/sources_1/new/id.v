@@ -183,7 +183,18 @@ module id(
                         default: begin
                         end
                     endcase	
-                    end									  
+                    end	
+                `EXE_SPECIAL2_INST:		begin
+                    case ( op3 )
+                        `EXE_CLO:    begin
+                            wreg_o <= `WriteEnable;        aluop_o <= `EXE_CLO_OP;
+                            alusel_o <= `EXE_RES_ARITHMETIC; reg1_read_o <= 1'b1;    reg2_read_o <= 1'b0;          
+                            instvalid <= `InstValid;    
+                         end
+                          default:    begin
+                          end
+                   endcase 
+                 end            								  
                 `EXE_ORI:			begin                        //ORIÖ¸Áî
                     wreg_o <= `WriteEnable;		aluop_o <= `EXE_OR_OP;
                     alusel_o <= `EXE_RES_LOGIC; reg1_read_o <= 1'b1;	reg2_read_o <= 1'b0;	  	
