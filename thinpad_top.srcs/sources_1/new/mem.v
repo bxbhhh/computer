@@ -154,7 +154,7 @@ module mem(
                     mem_addr_o <= mem_addr_i;
                     mem_we <= `WriteEnable;
                     mem_data_o <= reg2_i;
-                    mem_sel_o <= 4'b0000;    
+                    mem_sel_o <= 4'b1111;    
                     mem_ce_o <= `ChipEnable;        
                 end
                 default:		begin

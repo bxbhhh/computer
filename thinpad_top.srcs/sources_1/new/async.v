@@ -86,7 +86,7 @@ module async_receiver(
 	input clk,
 	input RxD,
 	output reg RxD_data_ready = 0,
-	input RxD_clear,
+	input rdn,
 	output reg [7:0] RxD_data = 0,  // data received, valid only (for one clock cycle) when RxD_data_ready is asserted
 
 	// We also detect if a gap occurs in the received stream of characters
@@ -170,7 +170,7 @@ if(sampleNow && RxD_state[3]) RxD_data <= {RxD_bit, RxD_data[7:1]};
 //reg RxD_data_error = 0;
 always @(posedge clk)
 begin
-	if(RxD_clear)
+	if(~rdn)
 		RxD_data_ready <= 0;
 	else
 		RxD_data_ready <= RxD_data_ready | (sampleNow && RxD_state==4'b0010 && RxD_bit);  // make sure a stop bit is received

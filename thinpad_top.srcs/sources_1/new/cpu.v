@@ -578,7 +578,7 @@ bus bus0(
 //        end
 //    end
 
-    async_transmitter #(.ClkFrequency(10000000),.Baud(9600))
+    async_transmitter #(.ClkFrequency(20000000),.Baud(9600))
         async_transmitter0(
         .clk(clk_uart),
         .TxD_start(uart_TxD_start),
@@ -587,15 +587,14 @@ bus bus0(
         .TxD(TxD)
 //        .over(real_over)
     );
-    reg rxd_clear;
-    assign uart_rdn = ~rxd_clear;
-    async_receiver #(.ClkFrequency(10000000),.Baud(9600))
+
+    async_receiver #(.ClkFrequency(20000000),.Baud(9600))
         async_receiver0(
         .clk(clk_uart),
         .RxD(RxD),
         .RxD_data_ready(uart_RxD_data_ready),
         .RxD_data(uart_RxD_data),
-        .RxD_clear(rxd_clear)
+        .rdn(uart_rdn)
     );
    
 endmodule

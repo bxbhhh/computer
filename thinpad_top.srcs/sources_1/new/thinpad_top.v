@@ -172,8 +172,8 @@ pll_example clock_gen
     
   //Àý»¯´¦ÀíÆ÷cpu
   cpu cpu0(
-    .clk_uart(clk_50M),
-    .clk(clk_50M),
+    .clk_uart(clk_20M),
+    .clk(clk_20M),
     .rst(reset_btn),
 
   
