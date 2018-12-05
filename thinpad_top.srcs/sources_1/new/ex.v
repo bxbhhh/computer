@@ -55,6 +55,13 @@ module ex(
     output reg[4:0]               cp0_reg_write_addr_o,
     output reg[`RegBus]           cp0_reg_data_o,
     
+    //exception
+    input wire[31:0]              excepttype_i,
+    input wire[`RegBus]          current_inst_address_i,
+    output wire[31:0]             excepttype_o,
+    output wire                   is_in_delayslot_o,
+    output wire[`RegBus]          current_inst_address_o,
+    
 	output reg					  stallreq       
 	
 );
@@ -66,13 +73,51 @@ module ex(
     wire[`RegBus] reg1_i_not; //保存输入的第一个操作数reg1_i取反后的值    
     wire[`RegBus] result_sum; //保存加法的结果
     
-    assign result_sum = reg1_i + reg2_i;
+    //exception
+    reg trapassert; //是否是自陷异常
+//    reg ovassert; //是否是溢出异常
+    wire[`RegBus] reg2_i_mux;
+//    wire ov_sum;
+    wire reg1_lt_reg2;
+    assign excepttype_o = {excepttype_i[31:12],1'b0,trapassert,excepttype_i[9:8],8'h00};
+    assign is_in_delayslot_o = is_in_delayslot_i;
+    assign current_inst_address_o = current_inst_address_i;
+    assign reg2_i_mux = aluop_i == `EXE_TGE_OP? (~reg2_i)+1 : reg2_i;
+//    assign ov_sum = ((!reg1_i[31] && !reg2_i_mux[31]) && result_sum[31]) ||
+//                                        ((reg1_i[31] && reg2_i_mux[31]) && (!result_sum[31]));  
+    assign reg1_lt_reg2 = ((reg1_i[31] && !reg2_i[31]) || 
+        (!reg1_i[31] && !reg2_i[31] && result_sum[31])||
+        (reg1_i[31] && reg2_i[31] && result_sum[31]));
+    
+    assign result_sum = reg1_i + reg2_i_mux;
     assign reg1_i_not = ~reg1_i;
     assign aluop_o = aluop_i;//利用aluop_o确定访存阶段加载存储指令
     assign reg2_o = reg2_i; //reg2_i是存储指令存储的数据，通过reg2_o到访存阶段
     //mem_addr传递到访存阶段，是加载、存储指令对应的存储器地址
     assign mem_addr_o = reg1_i + {{16{inst_i[15]}},inst_i[15:0]};//此处为译码阶段输出接口inst_0的输出值
     
+    always @ (*) begin
+            if(rst == `RstEnable) begin
+                trapassert <= `TrapNotAssert;
+            end else begin
+                trapassert <= `TrapNotAssert;
+                case (aluop_i)
+                    `EXE_TEQ_OP:        begin
+                        if( reg1_i == reg2_i ) begin
+                            trapassert <= `TrapAssert;
+                        end
+                    end
+                    `EXE_TGE_OP:        begin
+                        if( ~reg1_lt_reg2 ) begin
+                            trapassert <= `TrapAssert;
+                        end
+                    end
+                    default:                begin
+                        trapassert <= `TrapNotAssert;
+                    end
+                endcase
+            end
+        end
  	
  //进行逻辑运算   
 	always @ (*) begin
@@ -178,6 +223,7 @@ module ex(
     always @ (*) begin
 	   wd_o <= wd_i;	 	 	
 	   wreg_o <= wreg_i;
+        
 	   case ( alusel_i ) 
             `EXE_RES_LOGIC:		begin
                 wdata_o <= logicout;    //选择逻辑运算为最终运算结果

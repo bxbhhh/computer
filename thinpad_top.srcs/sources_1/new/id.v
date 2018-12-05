@@ -55,6 +55,10 @@ module id(
     output reg[`RegBus]           branch_target_address_o,       
     output reg[`RegBus]           link_addr_o,
     output reg                    is_in_delayslot_o,	
+    
+    //异常处理 
+    output wire[31:0]             excepttype_o,
+    output wire[`RegBus]          current_inst_address_o,
 	
 	output wire                   stallreq	//加载存储指令时信号赋值
 );
@@ -73,6 +77,9 @@ module id(
   reg stallreq_for_reg2_loadrelate;
   wire pre_inst_is_load;
   
+  reg excepttype_is_syscall;// 是否是系统调用syscall
+  reg excepttype_is_eret; // 是否是异常返回eret
+  
   assign pc_plus_8 = pc_i + 8;//保存当前后面第二条指令地址
   assign pc_plus_4 = pc_i +4;//保存当前后面第一条指令地址
   //分支指令中的offset左移两位，然后扩展32位
@@ -81,7 +88,10 @@ module id(
   assign pre_inst_is_load = ((ex_aluop_i == `EXE_LB_OP) || 
                                                       (ex_aluop_i == `EXE_LBU_OP)||
                                                       (ex_aluop_i == `EXE_LW_OP)) ? 1'b1 : 1'b0;
-
+  //低八位给外部中断，[8]是系统调用，[12]是eret                                             
+  assign excepttype_o = {19'b0, excepttype_is_eret,2'b0,1'b0, excepttype_is_syscall,8'b0};
+  assign current_inst_address_o = pc_i;
+    
   assign inst_o = inst_i;
   
 	always @ (*) begin	
@@ -114,12 +124,25 @@ module id(
 			link_addr_o <= `ZeroWord;
             branch_target_address_o <= `ZeroWord;
             branch_flag_o <= `NotBranch;    
-            next_inst_in_delayslot_o <= `NotInDelaySlot; 			
+            next_inst_in_delayslot_o <= `NotInDelaySlot; 
+            //异常处理			
+            excepttype_is_syscall <= `False_v;
+            excepttype_is_eret <= `False_v;
 		    case (op)
                 `EXE_SPECIAL_INST:		begin
                     case (op2)
                         5'b00000:			begin
                             case (op3)
+                                `EXE_TEQ: begin
+                                    wreg_o <= `WriteDisable;        aluop_o <= `EXE_TEQ_OP;
+                                    alusel_o <= `EXE_RES_NOP;   reg1_read_o <= 1'b1;    reg2_read_o <= 1'b1;
+                                    instvalid <= `InstValid;
+                                end
+                                `EXE_TGE: begin
+                                    wreg_o <= `WriteDisable;        aluop_o <= `EXE_TGE_OP;
+                                    alusel_o <= `EXE_RES_NOP;   reg1_read_o <= 1'b1;    reg2_read_o <= 1'b1;
+                                    instvalid <= `InstValid;
+                                end
                                 `EXE_OR:	begin
                                     wreg_o <= `WriteEnable;		aluop_o <= `EXE_OR_OP;
                                     alusel_o <= `EXE_RES_LOGIC; 	reg1_read_o <= 1'b1;	reg2_read_o <= 1'b1;
@@ -175,7 +198,17 @@ module id(
                        
                                     next_inst_in_delayslot_o <= `InDelaySlot;
                                     instvalid <= `InstValid; 
-                                end                                                                                               															  									
+                                end        
+                                //异常处理
+                                `EXE_SYSCALL: begin
+                                    wreg_o <= `WriteDisable;        
+                                    aluop_o <= `EXE_SYSCALL_OP;
+                                    alusel_o <= `EXE_RES_NOP;   
+                                    reg1_read_o <= 1'b0;   
+                                    reg2_read_o <= 1'b0;
+                                    instvalid <= `InstValid;
+                                    excepttype_is_syscall<= `True_v;
+                                end                                                                                           															  									
                                 default:	begin
                                 end
                              endcase
@@ -321,8 +354,15 @@ module id(
                     instvalid <= `InstValid;	
                 end
            end
-           
-           if(inst_i[31:21] == 11'b01000000000 &&inst_i[10:0] == 11'b00000000000) begin
+           if(inst_i == `EXE_ERET) begin
+                wreg_o <= `WriteDisable;
+                aluop_o <= `EXE_ERET_OP;
+                alusel_o <= `EXE_RES_NOP;   
+                reg1_read_o <= 1'b0;
+                reg2_read_o <= 1'b0;
+                instvalid <= `InstValid; 
+                excepttype_is_eret<= `True_v;    
+           end else if(inst_i[31:21] == 11'b01000000000 &&inst_i[10:0] == 11'b00000000000) begin
                  aluop_o <= `EXE_MFC0_OP;
                  alusel_o <= `EXE_RES_MOVE;
                  wd_o <= inst_i[20:16];
@@ -338,7 +378,7 @@ module id(
                  reg1_read_o <= 1'b1;
                  reg1_addr_o <= inst_i[20:16];
                  reg2_read_o <= 1'b0;                    
-             end		  
+             end
 		  
 		end       //if
 	end         //always

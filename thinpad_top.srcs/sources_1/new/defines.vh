@@ -70,6 +70,13 @@
 `define EXE_REGIMM_INST 6'b000001
 `define EXE_SPECIAL2_INST 6'b011100
 
+`define EXE_SYSCALL 6'b001100
+`define EXE_ERET 32'b01000010000000000000000000011000
+`define EXE_SYSCALL_OP 8'b00001100
+
+`define EXE_TEQ 6'b110100
+`define EXE_TEQI 5'b01100
+`define EXE_TGE 6'b110000
 //AluOp
 `define EXE_AND_OP   8'b00100100
 `define EXE_OR_OP    8'b00100101
@@ -103,9 +110,14 @@
 `define EXE_SB_OP  8'b11101000
 `define EXE_SW_OP  8'b11101011
 `define EXE_NOP_OP    8'b00000000
+`define EXE_ERET_OP 8'b01101011
 //exe_cp0
 `define EXE_MFC0_OP 8'b01011101
 `define EXE_MTC0_OP 8'b01100000
+
+`define EXE_TEQ_OP 8'b00110100
+`define EXE_TEQI_OP 8'b01001000
+`define EXE_TGE_OP 8'b00110000
 
 //AluSel
 `define EXE_RES_LOGIC 3'b001
@@ -149,3 +161,4 @@
 `define CP0_REG_EPC    5'b01110          //
 `define CP0_REG_PrId    5'b01111         //
 `define CP0_REG_CONFIG    5'b10000       //
+

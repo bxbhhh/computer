@@ -47,6 +47,26 @@ module mem(
     output reg[4:0]              cp0_reg_write_addr_o,
     output reg[`RegBus]          cp0_reg_data_o,
     
+    //exception
+    input wire[31:0]             excepttype_i,
+    input wire                   is_in_delayslot_i,
+    input wire[`RegBus]          current_inst_address_i,    
+        
+    //CP0的各个寄存器的值，但不一定是最新的值，要防止回写阶段指令写CP0
+    input wire[`RegBus]          cp0_status_i,
+    input wire[`RegBus]          cp0_cause_i,
+    input wire[`RegBus]          cp0_epc_i,
+    
+    //回写阶段的指令是否要写CP0，用来检测数据相关
+    input wire                    wb_cp0_reg_we,
+    input wire[4:0]               wb_cp0_reg_write_addr,
+    input wire[`RegBus]           wb_cp0_reg_data,
+    
+    output reg[31:0]             excepttype_o,
+    output wire[`RegBus]          cp0_epc_o,
+    output wire                  is_in_delayslot_o,
+    output wire[`RegBus]         current_inst_address_o,
+    
 	output wire[`DebugBus]      debugdata,
 	output wire[`DebugBus]      debugdatanew
 );
@@ -54,11 +74,82 @@ module mem(
     assign debugdatanew = {mem_data_i[15:8], mem_addr_i[31:16]};
     
 	wire[`RegBus] zero32;
+	//exception
+	reg[`RegBus]          cp0_status;
+    reg[`RegBus]          cp0_cause;
+    reg[`RegBus]          cp0_epc;    
+    
 	reg                   mem_we;
 
-	assign mem_we_o = mem_we ; //外部数据存储RAM读写信号
+	assign mem_we_o = mem_we & (~(|excepttype_o)); //外部数据存储RAM读写信号,最终给出
 	assign zero32 = `ZeroWord;
-
+    
+    assign is_in_delayslot_o = is_in_delayslot_i;
+    assign current_inst_address_o = current_inst_address_i;
+    assign cp0_epc_o = cp0_epc;
+    
+    //exception cp0 status
+    always @ (*) begin
+        if(rst == `RstEnable) begin
+            cp0_status <= `ZeroWord;
+        end else if((wb_cp0_reg_we == `WriteEnable) && 
+                                (wb_cp0_reg_write_addr == `CP0_REG_STATUS ))begin
+            cp0_status <= wb_cp0_reg_data;
+        end else begin
+            cp0_status <= cp0_status_i;
+        end
+    end
+    //exception cp0 epc
+    always @ (*) begin
+        if(rst == `RstEnable) begin
+            cp0_epc <= `ZeroWord;
+        end else if((wb_cp0_reg_we == `WriteEnable) && 
+                               (wb_cp0_reg_write_addr == `CP0_REG_EPC ))begin
+            cp0_epc <= wb_cp0_reg_data;
+        end else begin
+          cp0_epc <= cp0_epc_i;
+        end
+    end
+    //exception cp0 cause
+    always @ (*) begin
+        if(rst == `RstEnable) begin
+            cp0_cause <= `ZeroWord;
+        end else if((wb_cp0_reg_we == `WriteEnable) && 
+                                (wb_cp0_reg_write_addr == `CP0_REG_CAUSE ))begin
+            cp0_cause[9:8] <= wb_cp0_reg_data[9:8];
+            cp0_cause[22] <= wb_cp0_reg_data[22];
+            cp0_cause[23] <= wb_cp0_reg_data[23];
+        end else begin
+          cp0_cause <= cp0_cause_i;
+        end
+    end
+    
+    //exception 类型
+    always @ (*) begin
+        if(rst == `RstEnable) begin
+            excepttype_o <= `ZeroWord;
+        end else begin
+            excepttype_o <= `ZeroWord;
+            
+            if(current_inst_address_i != `ZeroWord) begin
+                if(((cp0_cause[15:8] & (cp0_status[15:8])) != 8'h00) && (cp0_status[1] == 1'b0) && 
+                            (cp0_status[0] == 1'b1)) begin
+                    excepttype_o <= 32'h00000001;        //interrupt
+                end else if(excepttype_i[8] == 1'b1) begin
+                  excepttype_o <= 32'h00000008;        //syscall
+                end else if(excepttype_i[9] == 1'b1) begin
+                    excepttype_o <= 32'h0000000a;        //inst_invalid
+                end else if(excepttype_i[10] ==1'b1) begin
+                    excepttype_o <= 32'h0000000d;        //trap
+                end else if(excepttype_i[11] == 1'b1) begin  //ov
+                    excepttype_o <= 32'h0000000c;
+                end else if(excepttype_i[12] == 1'b1) begin  //返回指令
+                    excepttype_o <= 32'h0000000e;
+                end
+            end
+                
+        end
+    end    
 	
 	always @ (*) begin
 		if(rst == `RstEnable) begin

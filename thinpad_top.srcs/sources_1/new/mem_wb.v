@@ -14,6 +14,7 @@ module mem_wb(
 	input	wire		clk,
 	input wire			rst,
 	input wire[5:0]    stall,
+	input wire flush,
 	
 
 	//来自访存阶段的信息	
@@ -43,13 +44,20 @@ module mem_wb(
 
 	   always @ (posedge clk) begin
             if(rst == `RstEnable) begin
-                wb_wd <= `NOPRegAddr;
-                wb_wreg <= `WriteDisable;
-              wb_wdata <= `ZeroWord;
-              //CP0
-              wb_cp0_reg_we <= `WriteDisable;
-              wb_cp0_reg_write_addr <= 5'b00000;
-              wb_cp0_reg_data <= `ZeroWord;                            
+                  wb_wd <= `NOPRegAddr;
+                  wb_wreg <= `WriteDisable;
+                  wb_wdata <= `ZeroWord;
+                  //CP0
+                  wb_cp0_reg_we <= `WriteDisable;
+                  wb_cp0_reg_write_addr <= 5'b00000;
+                  wb_cp0_reg_data <= `ZeroWord;    
+              end else if(flush == 1'b1 ) begin
+                  wb_wd <= `NOPRegAddr;
+                  wb_wreg <= `WriteDisable;
+                  wb_wdata <= `ZeroWord;
+                  wb_cp0_reg_we <= `WriteDisable;
+                  wb_cp0_reg_write_addr <= 5'b00000;
+                  wb_cp0_reg_data <= `ZeroWord;                        
             end else if(stall[4] == `Stop && stall[5] == `NoStop) begin
                   wb_wd <= `NOPRegAddr;
                   wb_wreg <= `WriteDisable;

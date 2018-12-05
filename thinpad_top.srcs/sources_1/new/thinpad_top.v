@@ -171,6 +171,8 @@ pll_example clock_gen
  // Clock in ports
   .clk_in1(clk_50M) // 外部时钟输入
  );
+    
+    wire[5:0] int;
 
     
   //例化处理器cpu
