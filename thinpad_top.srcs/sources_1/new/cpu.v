@@ -36,6 +36,10 @@ module cpu(
     output TxD,
     input RxD,
     
+    //cp0
+    input wire[5:0]                int_i,
+    output wire                    timer_int_o,
+    
     input wire[5:0] debug,
     output reg[`DebugBus] debugdata
 );
@@ -199,6 +203,15 @@ module cpu(
 
     wire[31:0]          mmu_if_addr;
     wire[31:0]          mmu_mem_addr;
+    
+    //CP0Ïà¹Ø
+    wire wb_cp0_reg_we_i;
+    wire[4:0] wb_cp0_reg_write_addr_i;
+    wire[`RegBus] wb_cp0_reg_data_i;
+    
+    wire[`RegBus] cp0_data_o;
+    wire[4:0] cp0_raddr_i;        
+    
   
   //pc_regÀý»¯
         pc_reg pc_reg0(
@@ -346,6 +359,13 @@ module cpu(
         .mem_addr_o(ex_mem_addr_o),
         .reg2_o(ex_reg2_o),             
                         
+                .wb_cp0_reg_we(wb_cp0_reg_we_i), 
+                .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+                .wb_cp0_reg_data(wb_cp0_reg_data_i),  
+                
+                .cp0_reg_data_i(cp0_data_o),
+                .cp0_reg_read_addr_o(cp0_raddr_i),     
+                
                 .stallreq(stallreq_from_id)
                 
         );
@@ -424,6 +444,11 @@ module cpu(
                 .wb_wd(wb_wd_i),
                 .wb_wreg(wb_wreg_i),
                 .wb_wdata(wb_wdata_i),
+                
+                .wb_cp0_reg_we(wb_cp0_reg_we_i),
+                .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+                .wb_cp0_reg_data(wb_cp0_reg_data_i),                        
+                
                 .debugdata(wbdebugdata)      
                                                                                 
         );
@@ -564,19 +589,7 @@ bus bus0(
         .stall(stall)
                 
     );
-    
-//    reg real_start,real_over;
-//    always @(posedge clk)
-//    begin
-//        real_start <= uart_TxD_start;
-//    end
-    
-//    always @(*)
-//    begin
-//        if(real_over) begin
-//            real_start <= 1'b0;
-//        end
-//    end
+
 
     async_transmitter #(.ClkFrequency(30000000),.Baud(9600))
         async_transmitter0(
@@ -596,5 +609,24 @@ bus bus0(
         .RxD_data(uart_RxD_data),
         .rdn(uart_rdn)
     );
-   
+    
+   cp0_reg cp0_reg0(
+            .clk(clk),
+            .rst(rst),
+            
+            .we_i(wb_cp0_reg_we_i),
+            .waddr_i(wb_cp0_reg_write_addr_i),
+            .raddr_i(cp0_raddr_i),
+            .data_i(wb_cp0_reg_data_i),
+            
+            //.excepttype_i(mem_excepttype_o),
+            .int_i(int_i),
+            //.current_inst_addr_i(mem_current_inst_address_o),
+            //.is_in_delayslot_i(mem_is_in_delayslot_o),
+            
+            .data_o(cp0_data_o),
+            
+            
+            .timer_int_o(timer_int_o)              
+        );
 endmodule
