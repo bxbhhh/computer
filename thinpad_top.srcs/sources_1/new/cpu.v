@@ -55,6 +55,8 @@ module cpu(
     wire[`DebugBus] baseramdebugdata;
     wire[`DebugBus] extramdebugdata;
     wire[`DebugBus] memdebugdata_hi;
+    wire[`DebugBus] cp0debugdata_r;
+    wire[`DebugBus] cp0debugdata_w;
     
     //============== UART ==============
         wire                uart_RxD_data_ready;
@@ -106,6 +108,12 @@ module cpu(
             6'b01011: begin
                 debugdata <= {uart_TxD_data,uart_RxD_data,RxD,7'b0};
             end
+             6'b01100: begin
+                debugdata <= {cp0debugdata_w};
+            end
+             6'b01101: begin
+                debugdata <= {cp0debugdata_r};
+             end
             default: begin
                 debugdata <= regdebugdata ;
             end
@@ -148,37 +156,51 @@ module cpu(
         wire[`RegAddrBus] ex_wd_o;
         wire[`RegBus] ex_wdata_o;
         wire[`AluOpBus] ex_aluop_o;
-    wire[`RegBus] ex_mem_addr_o;
-    wire[`RegBus] ex_reg1_o;
-    wire[`RegBus] ex_reg2_o;    
+        wire[`RegBus] ex_mem_addr_o;
+        wire[`RegBus] ex_reg1_o;
+        wire[`RegBus] ex_reg2_o;    
+    
+        wire ex_cp0_reg_we_o;
+        wire[4:0] ex_cp0_reg_write_addr_o;
+        wire[`RegBus] ex_cp0_reg_data_o;     
 
         //连接EX/MEM模块的输出与访存阶段MEM模块的输入
         wire mem_wreg_i;
         wire[`RegAddrBus] mem_wd_i;
         wire[`RegBus] mem_wdata_i;
         wire[`AluOpBus] mem_aluop_i;
-    wire[`RegBus] mem_mem_addr_i;
-    wire[`RegBus] mem_reg1_i;
-    wire[`RegBus] mem_reg2_i;           
+        wire[`RegBus] mem_mem_addr_i;
+        wire[`RegBus] mem_reg1_i;
+        wire[`RegBus] mem_reg2_i;  
+        
+        wire mem_cp0_reg_we_i;
+        wire[4:0] mem_cp0_reg_write_addr_i;
+        wire[`RegBus] mem_cp0_reg_data_i;
+             
 
         //连接访存阶段MEM模块的输出与MEM/WB模块的输入
         //for ram
-    wire[`RegBus]       ram_mem_data_intomem;
-    wire[`RegBus]       mem_ram_addr;
-    wire                mem_ram_we;
-    wire[3:0]           mem_ram_sel;
-    wire[`RegBus]       mem_ram_data_intoram;
-    wire                mem_ram_ce;
+        wire[`RegBus]       ram_mem_data_intomem;
+        wire[`RegBus]       mem_ram_addr;
+        wire                mem_ram_we;
+        wire[3:0]           mem_ram_sel;
+        wire[`RegBus]       mem_ram_data_intoram;
+        wire                mem_ram_ce;
         
         wire mem_wreg_o;
         wire[`RegAddrBus] mem_wd_o;
         wire[`RegBus] mem_wdata_o;
-
         
+        wire mem_cp0_reg_we_o;
+        wire[4:0] mem_cp0_reg_write_addr_o;
+        wire[`RegBus] mem_cp0_reg_data_o;
         //连接MEM/WB模块的输出与回写阶段的输入 
         wire wb_wreg_i;
         wire[`RegAddrBus] wb_wd_i;
         wire[`RegBus] wb_wdata_i;
+        wire wb_cp0_reg_we_i;
+        wire[4:0] wb_cp0_reg_write_addr_i;
+        wire[`RegBus] wb_cp0_reg_data_i;    
         
         //连接译码阶段ID模块与通用寄存器Regfile模块
     wire reg1_read;
@@ -205,9 +227,6 @@ module cpu(
     wire[31:0]          mmu_mem_addr;
     
     //CP0相关
-    wire wb_cp0_reg_we_i;
-    wire[4:0] wb_cp0_reg_write_addr_i;
-    wire[`RegBus] wb_cp0_reg_data_i;
     
     wire[`RegBus] cp0_data_o;
     wire[4:0] cp0_raddr_i;        
@@ -356,15 +375,25 @@ module cpu(
                 .wdata_o(ex_wdata_o),
                 
                 .aluop_o(ex_aluop_o),
-        .mem_addr_o(ex_mem_addr_o),
-        .reg2_o(ex_reg2_o),             
-                        
+                .mem_addr_o(ex_mem_addr_o),
+                .reg2_o(ex_reg2_o), 
+                            
+                  //访存阶段的指令是否要写CP0，用来检测数据相关
+                .mem_cp0_reg_we(mem_cp0_reg_we_o),
+                .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+                .mem_cp0_reg_data(mem_cp0_reg_data_o),
+
                 .wb_cp0_reg_we(wb_cp0_reg_we_i), 
                 .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
                 .wb_cp0_reg_data(wb_cp0_reg_data_i),  
                 
                 .cp0_reg_data_i(cp0_data_o),
                 .cp0_reg_read_addr_o(cp0_raddr_i),     
+                
+                //向下一流水级传递，用于写CP0中的寄存器
+                .cp0_reg_we_o(ex_cp0_reg_we_o),
+                .cp0_reg_write_addr_o(ex_cp0_reg_write_addr_o),
+                .cp0_reg_data_o(ex_cp0_reg_data_o),
                 
                 .stallreq(stallreq_from_id)
                 
@@ -390,6 +419,14 @@ module cpu(
                 .mem_wd(mem_wd_i),
                 .mem_wreg(mem_wreg_i),
                 .mem_wdata(mem_wdata_i),
+                
+                .ex_cp0_reg_we(ex_cp0_reg_we_o),
+                .ex_cp0_reg_write_addr(ex_cp0_reg_write_addr_o),
+                .ex_cp0_reg_data(ex_cp0_reg_data_o),            
+                        
+                .mem_cp0_reg_we(mem_cp0_reg_we_i),
+                .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_i),
+                .mem_cp0_reg_data(mem_cp0_reg_data_i),
                 
             .mem_aluop(mem_aluop_i),
         .mem_mem_addr(mem_mem_addr_i),
@@ -425,6 +462,16 @@ module cpu(
         .mem_sel_o(mem_ram_sel),
         .mem_data_o(mem_ram_data_intoram),
         .mem_ce_o(mem_ram_ce),
+        
+        .cp0_reg_we_i(mem_cp0_reg_we_i),
+         .cp0_reg_write_addr_i(mem_cp0_reg_write_addr_i),
+         .cp0_reg_data_i(mem_cp0_reg_data_i),
+        
+        .cp0_reg_we_o(mem_cp0_reg_we_o),
+        .cp0_reg_write_addr_o(mem_cp0_reg_write_addr_o),
+        .cp0_reg_data_o(mem_cp0_reg_data_o),
+                
+           
         .debugdata(memdebugdata),
         .debugdatanew(memdebugdata_hi) 
         );
@@ -447,7 +494,11 @@ module cpu(
                 
                 .wb_cp0_reg_we(wb_cp0_reg_we_i),
                 .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
-                .wb_cp0_reg_data(wb_cp0_reg_data_i),                        
+                .wb_cp0_reg_data(wb_cp0_reg_data_i),        
+                
+                .mem_cp0_reg_we(mem_cp0_reg_we_o),
+                .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+                .mem_cp0_reg_data(mem_cp0_reg_data_o),                  
                 
                 .debugdata(wbdebugdata)      
                                                                                 
@@ -627,6 +678,8 @@ bus bus0(
             .data_o(cp0_data_o),
             
             
-            .timer_int_o(timer_int_o)              
+            .timer_int_o(timer_int_o),
+            .debugdata_r(cp0debugdata_r),
+            .debugdata_w(cp0debugdata_w)
         );
 endmodule

@@ -22,8 +22,12 @@ module cp0_reg(
     output reg[`RegBus]           config_o,
     output reg[`RegBus]           prid_o,
     
-    output reg                   timer_int_o    
+    output reg                   timer_int_o,
+    output wire[`DebugBus] debugdata_w,
+    output wire[`DebugBus] debugdata_r
     );
+    assign debugdata_w = {3'b0,waddr_i[4:0],data_i[15:0]};
+     assign debugdata_r = {3'b0,raddr_i[4:0],data_o[15:0]};
     
         /*
         * ¶ÔCP0¼Ä´æÆ÷µÄÐ´²Ù×÷
