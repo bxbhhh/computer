@@ -164,7 +164,7 @@ pll_example clock_gen
   .clk_out3(clk_30M),
   .clk_out4(clk_40M),
   .clk_out4_2(clk_42M),
-  .clk_put4_3(clk_43M),
+  .clk_out4_3(clk_43M),
   .clk_out4_5(clk_45M),
   // Status and control signals
   .reset(reset_btn), // PLL∏¥Œª ‰»Î
