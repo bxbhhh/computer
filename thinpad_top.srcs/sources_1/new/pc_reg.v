@@ -12,6 +12,7 @@ module pc_reg(
 	input	wire clk,
 	input wire	 rst,
 	input wire[5:0] stall,
+	input wire sleep_req,
 	output reg[`InstAddrBus]	pc,
 	output reg   ce,
 	//÷–∂œ“Ï≥£
@@ -28,6 +29,8 @@ module pc_reg(
 	always @ (posedge clk) begin
     if (ce == `ChipDisable) begin
         pc <= 32'h80000000;
+    end else if(sleep_req == 1'b1) begin
+         pc <= 32'h80000000;
     end else begin 
         if (flush == 1'b1) begin
             pc <= new_pc;// exception happens , get exception hanler in new_pc from ctrl module;

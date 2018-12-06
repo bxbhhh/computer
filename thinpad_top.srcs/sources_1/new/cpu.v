@@ -32,6 +32,16 @@ module cpu(
     output wire             ext_ram_we_n,
     output wire[3:0]        ext_ram_be_n,
     
+    //flash
+    output wire[22:0] flash_addr,      //Flash地址，a0仅在8bit模式有效，16bit模式无意义
+    inout  wire[15:0] flash_data,      //Flash数据
+    output wire flash_rst,         //Flash复位信号，低有效
+    output wire flash_vpen,         //Flash写保护信号，低电平时不能擦除、烧写
+    output wire flash_cen,         //Flash片选信号，低有效
+    output wire flash_oen,         //Flash读使能信号，低有效
+    output wire flash_wen,         //Flash写使能信号，低有效
+    output wire flash_byte,       //Flash 8bit模式选择，低有效。在使用flash的16位模式时请设为1
+    
     // uart
     output TxD,
     input RxD,
@@ -53,6 +63,8 @@ module cpu(
     wire[`DebugBus] memdebugdata_hi;
     wire[`DebugBus] cp0debugdata_r;
     wire[`DebugBus] cp0debugdata_w;
+    wire[`DebugBus] bootdebugdata1;
+    wire[`DebugBus] bootdebugdata2;
     
     //============== UART ==============
         wire                uart_RxD_data_ready;
@@ -61,6 +73,7 @@ module cpu(
         wire                uart_TxDready;
         wire                uart_TxD_start;
         wire[7:0]           uart_TxD_data;
+    
     
     
     always @(*) begin
@@ -110,6 +123,12 @@ module cpu(
              6'b01101: begin
                 debugdata <= {cp0debugdata_r};
              end
+             6'b01110: begin
+                debugdata <= bootdebugdata1;
+             end
+              6'b01111: begin
+                debugdata <= bootdebugdata2;
+            end
             default: begin
                 debugdata <= regdebugdata ;
             end
@@ -240,7 +259,7 @@ module cpu(
         wire stallreq_from_id;    
         wire stallreq_from_ex;
         wire stallreq_from_mem;
-    
+        wire stallreq_from_start;
         wire stallreq_from_if;
     
         wire[31:0]          mmu_if_addr;
@@ -262,6 +281,54 @@ module cpu(
         wire[`RegBus]    cp0_prid;
         wire[`RegBus] latest_epc;
         
+        wire[31:0] boot_baseram_data_i;
+        wire[22:0] boot_baseram_addr_i;
+        
+        assign flash_rst = 1'b1;
+        assign flash_vpen = 1'b0;         //Flash写保护信号，低电平时不能擦除、烧写
+        assign flash_byte = 1'b1;
+        wire[22:0] flash_addr_boot_i;
+        wire[15:0] flash_data_boot_o;
+        wire flash_boot_ce;
+        wire flash_boot_oe;
+        wire flash_boot_we;
+        
+        flash_controller flash0(
+                .addr_i(flash_addr_boot_i),
+                 .rst_i(flash_rst),         //Flash复位信号，低有效
+                .vpen_i(flash_vpen),         //Flash写保护信号，低电平时不能擦除、烧写
+                 .cen_i(flash_boot_ce),         //Flash片选信号，低有效
+                 .oen_i(flash_boot_oe),         //Flash读使能信号，低有效
+                 .wen_i(flash_boot_we),         //Flash写使能信号，低有效
+               .byte_i(flash_byte),
+                
+               .flash_addr(flash_addr),      //Flash地址，a0仅在8bit模式有效，16bit模式无意义
+               .flash_data(flash_data),      //Flash数据
+                .flash_rst(flash_rst),         //Flash复位信号，低有效
+               .flash_vpen(flash_vpen),         //Flash写保护信号，低电平时不能擦除、烧写
+               .flash_cen(flash_cen),        //Flash片选信号，低有效\
+               .flash_oen(flash_oen),
+               .flash_wen(flash_wen),         //Flash写使能信号，低有效
+               .flash_byte(flash_byte)       //Flash 8bit模式选择，低有效。在使用flash的16位模式时请设为1
+            );
+        
+        
+        boot_controller boot0(
+            .clk(clk),
+            .rst(rst),
+            .stall_req(stallreq_from_start),
+            .read_addr_o(flash_addr_boot_i),
+            .flash_data_i(flash_data),
+            
+            .write_addr_o(boot_baseram_addr_i),
+            .ram_data_o(boot_baseram_data_i),
+            .flash_ce_o(flash_boot_ce),
+            .flash_oe_o(flash_boot_oe),
+            .flash_we_o(flash_boot_we),
+            .debugdata1(bootdebugdata1),
+            .debugdata2(bootdebugdata2)
+        );
+        
       
   //pc_reg例化
         pc_reg pc_reg0(
@@ -273,7 +340,8 @@ module cpu(
                 .branch_flag_i(id_branch_flag_o),
                 .branch_target_address_i(branch_target_address),    
                 .pc(if_pc),
-                .ce(if_ce)      
+                .ce(if_ce),
+                .sleep_req(stallreq_from_start)
                         
         );
         
@@ -590,6 +658,7 @@ module cpu(
         //来自内存的暂停
         .stallreq_from_mem(stallreq_from_mem),
         .stallreq_from_if(stallreq_from_if),
+        .stallreq_from_start(stallreq_from_start),
         .new_pc(new_pc),
         .flush(flush),
         .stall(stall),
@@ -653,6 +722,12 @@ bus bus0(
         .ext_ram_sel_o(ext_ram_sel),
         .ext_ram_data_o(ext_ram_data_o),
         .ext_ram_data_i(ext_ram_data_i),
+        
+        .boot_req(stallreq_from_start),
+        .boot_mem_data_i(boot_baseram_data_i), //启动时存储数据
+        .boot_mem_addr_i(boot_baseram_addr_i), //启动时存储地址
+        
+        
         .busdebugdata(busdebugdata),
         
 //        .vga_data_o(vga_wdata),
@@ -681,19 +756,14 @@ bus bus0(
             .we_i(ext_ram_we),
             .sel_i(ext_ram_sel),
             .data_o(ext_ram_data_i),
-    
             .sram_data(ext_ram_data),
             .sram_addr(ext_ram_addr),
             .sram_ce_n(ext_ram_ce_n),
             .sram_oe_n(ext_ram_oe_n),
             .sram_we_n(ext_ram_we_n),
             .sram_be_n(ext_ram_be_n),
-            .debugdata(extramdebugdata),
-            
-            // ====== debug ======
-            .pc(if_pc),
-            .inst(if_inst),
-            .stall(stall)
+            .debugdata(extramdebugdata)
+           
                     
         );
     
@@ -712,16 +782,12 @@ bus bus0(
         .sram_oe_n(base_ram_oe_n),
         .sram_we_n(base_ram_we_n),
         .sram_be_n(base_ram_be_n),
-        .debugdata(baseramdebugdata),
-        // ====== debug ======
-        .pc(if_pc),
-        .inst(if_inst),
-        .stall(stall)
-                
+        .debugdata(baseramdebugdata)
+              
     );
 
 
-    async_transmitter #(.ClkFrequency(30000000),.Baud(9600))
+    async_transmitter #(.ClkFrequency(43000000),.Baud(9600))
         async_transmitter0(
         .clk(clk_uart),
         .TxD_start(uart_TxD_start),
@@ -731,7 +797,7 @@ bus bus0(
 //        .over(real_over)
     );
 
-    async_receiver #(.ClkFrequency(30000000),.Baud(9600))
+    async_receiver #(.ClkFrequency(43000000),.Baud(9600))
         async_receiver0(
         .clk(clk_uart),
         .RxD(RxD),

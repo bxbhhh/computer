@@ -156,14 +156,15 @@ assign leds[15:0] = debugdata[15:0];
 //     end
 
 
-wire locked, clk_10M, clk_20M,clk_30M,clk_40M,clk_45M;
+wire locked, clk_10M, clk_20M,clk_30M,clk_40M,clk_45M,clk_42M,clk_43M;
 pll_example clock_gen 
  (
   // Clock out ports
   .clk_out1(clk_10M), // 时钟输出1，频率在IP配置界面中设置
-  .clk_out2(clk_20M), // 时钟输出2，频率在IP配置界面中设置
   .clk_out3(clk_30M),
   .clk_out4(clk_40M),
+  .clk_out4_2(clk_42M),
+  .clk_put4_3(clk_43M),
   .clk_out4_5(clk_45M),
   // Status and control signals
   .reset(reset_btn), // PLL复位输入
@@ -173,12 +174,13 @@ pll_example clock_gen
  );
     
     wire[5:0] int;
-
+    
+    
     
   //例化处理器cpu
   cpu cpu0(
-    .clk_uart(clk_30M),
-    .clk(clk_30M),
+    .clk_uart(clk_43M),
+    .clk(clk_43M),
     .rst(reset_btn),  
    .base_ram_data(base_ram_data),
    .base_ram_addr(base_ram_addr),
@@ -193,6 +195,15 @@ pll_example clock_gen
    .ext_ram_oe_n(ext_ram_oe_n),
    .ext_ram_we_n(ext_ram_we_n),
    .ext_ram_be_n(ext_ram_be_n),
+   
+   .flash_addr(flash_a),      //Flash地址，a0仅在8bit模式有效，16bit模式无意义
+   .flash_data(flash_d),      //Flash数据
+   .flash_rst(flash_rp_n),         //Flash复位信号，低有效
+   .flash_vpen(flash_vpen),         //Flash写保护信号，低电平时不能擦除、烧写
+   .flash_cen(flash_ce_n),         //Flash片选信号，低有效
+   .flash_oen(flash_oe_n),         //Flash读使能信号，低有效
+   .flash_wen(flash_we_n),         //Flash写使能信号，低有效
+   .flash_byte(flash_byte_n),        //Flash 8bit模式选择，低有效。在使用flash的16位模式时请设为1
    
    .TxD(txd),
    .RxD(rxd),

@@ -6,6 +6,7 @@ module bus(
     input wire        rst,
     // ctrl
     input wire[5:0]     stall_i,
+    
     // input wire          flush_i,
 
     input wire          if_ce_i,    //取指控制使能，低有效
@@ -19,9 +20,9 @@ module bus(
     input wire          mem_we_i,   //读取内存的使能信号
     input wire[3:0]     mem_sel_i,  //？？？？？
     output reg[`RegBus] mem_data_o, //从内存读出的数据
+   
     
     output reg          mem_stallreq_o, //内存相关控制信号
-    output reg          mem_stallreq_o2,
     //UART
     //读取串口相关
     input wire uart_RxD_dataready_i,    //读取串口，数据准备完毕
@@ -59,6 +60,10 @@ module bus(
      input wire[31:0] pc,
      output reg[20:0] button_buff,
      
+     input wire boot_req,
+     input wire[`RegBus] boot_mem_data_i, //访存写入数据，用来写入内存的数据
+     input wire[`RegBus] boot_mem_addr_i, //内存的地址
+     
      output wire[`DebugBus] busdebugdata
 );
     reg[31:0] uart_data_buff;   //串口数据缓冲区
@@ -81,7 +86,6 @@ module bus(
         uart_RxD_rdn_o <= 1'b1;//1 means not  
         if_stallreq_o <= `NoStop;
         mem_stallreq_o <= `NoStop;
-        mem_stallreq_o2 <= `NoStop;
         if_data_o <= 32'h0;
         mem_data_o <= 32'h0;
         sram_ce_o <= 1'b0;
@@ -97,7 +101,6 @@ module bus(
         if (rst == `RstEnable) begin
             if_stallreq_o <= `NoStop;
             mem_stallreq_o <= `NoStop;
-            mem_stallreq_o2 <= `NoStop;
             if_data_o <= 32'h0;
             mem_data_o <= 32'h0;
         // end else if (flush_i == 1'b1) begin
@@ -105,6 +108,14 @@ module bus(
         //     mem_stallreq_o <= `NoStop;
         //     if_data_o <= 32'h0;
         //     mem_data_o <= 32'h0;
+        end else if(boot_req == 1'b1) begin
+             vga_ce_o <= 1'b0;
+             sram_ce_o <= 1'b1;
+             sram_we_o <= 1'b1;
+             sram_addr_o <= boot_mem_addr_i[21:2];
+             sram_no <= 1'b0;
+             sram_data_o <= boot_mem_data_i;
+             sram_sel_o <= 4'b1111;
         end else begin
             if (mem_ce_i == 1'b1) begin
                 if (mem_addr_i == 32'h1FD003F8/*hbfd003f8*/) begin // UART
@@ -133,7 +144,6 @@ module bus(
                     end
                     
                 end else if (mem_addr_i == 32'h1FD003FC) begin // UART status
-                    mem_stallreq_o2 <= `NoStop;//Be careful!!!!!!!!!!!!!!!! this may be to be deleted
                     mem_stallreq_o <= `NoStop;
                     if_stallreq_o <= `Stop;
                     uart_RxD_rdn_o <= 1'b1;//not read
@@ -147,7 +157,6 @@ module bus(
                 end else begin//Read or Write in Sram
                     if_stallreq_o <= `Stop;
                     mem_stallreq_o <= `NoStop;
-                    mem_stallreq_o2 <= `NoStop;
                     uart_RxD_rdn_o <= 1'b1;
                     uart_TxD_start_o <= 1'b0;
                     vga_ce_o <= 1'b0;

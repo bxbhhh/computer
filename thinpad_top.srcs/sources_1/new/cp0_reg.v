@@ -60,7 +60,7 @@ module cp0_reg(
             config_o <= 32'b00000000000000001000000000000000;
             //PRId寄存器的初始值，其中制作者是L，对应的是0x48
             //类型是0x1，表示是基本类型，版本号是1.0
-            prid_o <= 32'b00000000010011000000000100000010;
+            prid_o <= 32'h80001000;
             timer_int_o <= `InterruptNotAssert;
         end else begin
         

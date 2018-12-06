@@ -17,6 +17,7 @@ module ctrl(
 	input wire                  stallreq_from_ex,
 	input wire					stallreq_from_if,
 	input wire                 stallreq_from_mem,
+	input wire                 stallreq_from_start,
 	output reg[5:0]             stall,      
 	//exception
 	input wire[31:0]             excepttype_i,
@@ -57,6 +58,9 @@ module ctrl(
                     default    : begin
                     end
                 endcase     
+            end else if (stallreq_from_start == `Stop) begin
+                 stall <= 6'b111111;     
+                 flush <= 1'b0;  
             end else if (stallreq_from_mem == `Stop) begin
                  stall <= 6'b011111;     
                  flush <= 1'b0;               

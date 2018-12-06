@@ -1,7 +1,7 @@
 -- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2018.2 (win64) Build 2258646 Thu Jun 14 20:03:12 MDT 2018
--- Date        : Tue Dec  4 23:46:20 2018
+-- Date        : Thu Dec  6 11:41:37 2018
 -- Host        : SJY running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               F:/STUDY/program/make_computer/computer/thinpad_top.srcs/sources_1/ip/pll_example/pll_example_sim_netlist.vhdl
@@ -16,11 +16,13 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity pll_example_pll_example_clk_wiz is
   port (
+    clk_out4_4 : out STD_LOGIC;
     clk_out1 : out STD_LOGIC;
-    clk_out2 : out STD_LOGIC;
     clk_out3 : out STD_LOGIC;
     clk_out4 : out STD_LOGIC;
     clk_out4_5 : out STD_LOGIC;
+    clk_out4_2 : out STD_LOGIC;
+    clk_out4_3 : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -32,8 +34,10 @@ end pll_example_pll_example_clk_wiz;
 architecture STRUCTURE of pll_example_pll_example_clk_wiz is
   signal clk_in1_pll_example : STD_LOGIC;
   signal clk_out1_pll_example : STD_LOGIC;
-  signal clk_out2_pll_example : STD_LOGIC;
   signal clk_out3_pll_example : STD_LOGIC;
+  signal clk_out4_2_pll_example : STD_LOGIC;
+  signal clk_out4_3_pll_example : STD_LOGIC;
+  signal clk_out4_4_pll_example : STD_LOGIC;
   signal clk_out4_5_pll_example : STD_LOGIC;
   signal clk_out4_pll_example : STD_LOGIC;
   signal clkfbout_buf_pll_example : STD_LOGIC;
@@ -45,8 +49,6 @@ architecture STRUCTURE of pll_example_pll_example_clk_wiz is
   signal NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT2B_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_CLKOUT3B_UNCONNECTED : STD_LOGIC;
-  signal NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED : STD_LOGIC;
-  signal NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_DRDY_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_PSDONE_UNCONNECTED : STD_LOGIC;
   signal NLW_mmcm_adv_inst_DO_UNCONNECTED : STD_LOGIC_VECTOR ( 15 downto 0 );
@@ -64,6 +66,8 @@ architecture STRUCTURE of pll_example_pll_example_clk_wiz is
   attribute BOX_TYPE of clkout3_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of clkout4_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of clkout5_buf : label is "PRIMITIVE";
+  attribute BOX_TYPE of clkout6_buf : label is "PRIMITIVE";
+  attribute BOX_TYPE of clkout7_buf : label is "PRIMITIVE";
   attribute BOX_TYPE of mmcm_adv_inst : label is "PRIMITIVE";
 begin
 clkf_buf: unisim.vcomponents.BUFG
@@ -81,13 +85,13 @@ clkin1_ibufg: unisim.vcomponents.IBUF
     );
 clkout1_buf: unisim.vcomponents.BUFG
      port map (
-      I => clk_out1_pll_example,
-      O => clk_out1
+      I => clk_out4_4_pll_example,
+      O => clk_out4_4
     );
 clkout2_buf: unisim.vcomponents.BUFG
      port map (
-      I => clk_out2_pll_example,
-      O => clk_out2
+      I => clk_out1_pll_example,
+      O => clk_out1
     );
 clkout3_buf: unisim.vcomponents.BUFG
      port map (
@@ -104,45 +108,55 @@ clkout5_buf: unisim.vcomponents.BUFG
       I => clk_out4_5_pll_example,
       O => clk_out4_5
     );
+clkout6_buf: unisim.vcomponents.BUFG
+     port map (
+      I => clk_out4_2_pll_example,
+      O => clk_out4_2
+    );
+clkout7_buf: unisim.vcomponents.BUFG
+     port map (
+      I => clk_out4_3_pll_example,
+      O => clk_out4_3
+    );
 mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
     generic map(
       BANDWIDTH => "OPTIMIZED",
-      CLKFBOUT_MULT_F => 22.375000,
+      CLKFBOUT_MULT_F => 62.375000,
       CLKFBOUT_PHASE => 0.000000,
       CLKFBOUT_USE_FINE_PS => false,
       CLKIN1_PERIOD => 20.000000,
       CLKIN2_PERIOD => 0.000000,
-      CLKOUT0_DIVIDE_F => 111.875000,
+      CLKOUT0_DIVIDE_F => 23.625000,
       CLKOUT0_DUTY_CYCLE => 0.500000,
       CLKOUT0_PHASE => 0.000000,
       CLKOUT0_USE_FINE_PS => false,
-      CLKOUT1_DIVIDE => 56,
+      CLKOUT1_DIVIDE => 104,
       CLKOUT1_DUTY_CYCLE => 0.500000,
       CLKOUT1_PHASE => 0.000000,
       CLKOUT1_USE_FINE_PS => false,
-      CLKOUT2_DIVIDE => 37,
+      CLKOUT2_DIVIDE => 35,
       CLKOUT2_DUTY_CYCLE => 0.500000,
       CLKOUT2_PHASE => 0.000000,
       CLKOUT2_USE_FINE_PS => false,
-      CLKOUT3_DIVIDE => 28,
+      CLKOUT3_DIVIDE => 26,
       CLKOUT3_DUTY_CYCLE => 0.500000,
       CLKOUT3_PHASE => 0.000000,
       CLKOUT3_USE_FINE_PS => false,
       CLKOUT4_CASCADE => false,
-      CLKOUT4_DIVIDE => 25,
+      CLKOUT4_DIVIDE => 23,
       CLKOUT4_DUTY_CYCLE => 0.500000,
       CLKOUT4_PHASE => 0.000000,
       CLKOUT4_USE_FINE_PS => false,
-      CLKOUT5_DIVIDE => 1,
+      CLKOUT5_DIVIDE => 25,
       CLKOUT5_DUTY_CYCLE => 0.500000,
       CLKOUT5_PHASE => 0.000000,
       CLKOUT5_USE_FINE_PS => false,
-      CLKOUT6_DIVIDE => 1,
+      CLKOUT6_DIVIDE => 24,
       CLKOUT6_DUTY_CYCLE => 0.500000,
       CLKOUT6_PHASE => 0.000000,
       CLKOUT6_USE_FINE_PS => false,
       COMPENSATION => "ZHOLD",
-      DIVCLK_DIVIDE => 1,
+      DIVCLK_DIVIDE => 3,
       IS_CLKINSEL_INVERTED => '0',
       IS_PSEN_INVERTED => '0',
       IS_PSINCDEC_INVERTED => '0',
@@ -164,17 +178,17 @@ mmcm_adv_inst: unisim.vcomponents.MMCME2_ADV
       CLKIN2 => '0',
       CLKINSEL => '1',
       CLKINSTOPPED => NLW_mmcm_adv_inst_CLKINSTOPPED_UNCONNECTED,
-      CLKOUT0 => clk_out1_pll_example,
+      CLKOUT0 => clk_out4_4_pll_example,
       CLKOUT0B => NLW_mmcm_adv_inst_CLKOUT0B_UNCONNECTED,
-      CLKOUT1 => clk_out2_pll_example,
+      CLKOUT1 => clk_out1_pll_example,
       CLKOUT1B => NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED,
       CLKOUT2 => clk_out3_pll_example,
       CLKOUT2B => NLW_mmcm_adv_inst_CLKOUT2B_UNCONNECTED,
       CLKOUT3 => clk_out4_pll_example,
       CLKOUT3B => NLW_mmcm_adv_inst_CLKOUT3B_UNCONNECTED,
       CLKOUT4 => clk_out4_5_pll_example,
-      CLKOUT5 => NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED,
-      CLKOUT6 => NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED,
+      CLKOUT5 => clk_out4_2_pll_example,
+      CLKOUT6 => clk_out4_3_pll_example,
       DADDR(6 downto 0) => B"0000000",
       DCLK => '0',
       DEN => '0',
@@ -197,11 +211,13 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity pll_example is
   port (
+    clk_out4_4 : out STD_LOGIC;
     clk_out1 : out STD_LOGIC;
-    clk_out2 : out STD_LOGIC;
     clk_out3 : out STD_LOGIC;
     clk_out4 : out STD_LOGIC;
     clk_out4_5 : out STD_LOGIC;
+    clk_out4_2 : out STD_LOGIC;
+    clk_out4_3 : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -216,9 +232,11 @@ inst: entity work.pll_example_pll_example_clk_wiz
      port map (
       clk_in1 => clk_in1,
       clk_out1 => clk_out1,
-      clk_out2 => clk_out2,
       clk_out3 => clk_out3,
       clk_out4 => clk_out4,
+      clk_out4_2 => clk_out4_2,
+      clk_out4_3 => clk_out4_3,
+      clk_out4_4 => clk_out4_4,
       clk_out4_5 => clk_out4_5,
       locked => locked,
       reset => reset
